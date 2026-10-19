@@ -1,0 +1,11 @@
+{
+  "booking": { "restaurant": "Ravintola Näsi", "time": "20:30", "seating": "indoors", "partySize": 8, "vegetarian": true },
+  "turns": [
+    { "speaker": "yours", "text": "Hi, I'm calling on behalf of a team of eight. Could we get a table tonight at seven?" },
+    { "speaker": "restaurant", "text": "Good evening! At seven we only have the terrace, or I can seat you indoors at half past eight." },
+    { "speaker": "yours", "text": "For a group of eight, indoors at half past eight sounds better. Do you have a vegetarian option?" },
+    { "speaker": "restaurant", "text": "Absolutely, our vegetarian menu is three courses, about thirty-eight euros per person." },
+    { "speaker": "yours", "text": "Perfect, that fits our budget. Please book eight people indoors at eight thirty." },
+    { "speaker": "restaurant", "text": "Done! Eight people, half past eight, indoors, with the vegetarian menu ready. See you tonight." }
+  ]
+}

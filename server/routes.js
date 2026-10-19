@@ -6,8 +6,10 @@ import { runAgent } from './agent.js';
 import { createDemo1Tools } from './tools/demo1.js';
 import { getEveningForecast } from './weather.js';
 import { sendInvite } from './telegram.js';
+import { runNegotiation } from './negotiation.js';
 
 const DATA = fileURLToPath(new URL('../public/data/', import.meta.url));
+const REPLAYS = fileURLToPath(new URL('../public/replays/', import.meta.url));
 const load = (name) => JSON.parse(readFileSync(DATA + name, 'utf8'));
 
 const DEMO1_SYSTEM = `You are Brightloop's assistant. Use the tools to answer from the company notes and team table.
@@ -69,6 +71,21 @@ export function createRouter({ env, openai = createOpenAI({ apiKey: env.OPENAI_A
   router.post('/api/telegram', async (req, res) => {
     const who = req.body.who === 'aidul' ? 'AIDUL' : 'NASIR';
     res.json(await sendInvite({ token: env.TELEGRAM_BOT_TOKEN, chatId: env[`TELEGRAM_CHAT_ID_${who}`], text: String(req.body.text ?? '') }));
+  });
+
+  router.post('/api/negotiate', async (req, res) => {
+    const stream = sse(res);
+    const r = req.body.request ?? {};
+    const request = {
+      restaurant: r.restaurant ?? 'Ravintola Näsi',
+      partySize: Number(r.partySize ?? 8),
+      vegetarian: Number(r.vegetarian ?? 1),
+      budgetPerPerson: Number(r.budgetPerPerson ?? 40),
+      preferredTime: r.preferredTime ?? '19:00',
+      rainChancePct: Number(r.rainChancePct ?? 70),
+    };
+    await runNegotiation({ openai, request, emit: stream.send, fallbackDir: REPLAYS });
+    stream.end();
   });
 
   // Mints a short-lived key so the browser can talk to the Realtime API without ever seeing ours.
