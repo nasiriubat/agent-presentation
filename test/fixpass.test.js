@@ -13,8 +13,11 @@ import { createNegotiator } from '../src/voice/negotiate.js';
 import { exitGate } from '../src/voice/exitGate.js';
 import { createRouter } from '../server/routes.js';
 
+// A fetch that never answers. It holds a referenced timer like a real open socket would,
+// because AbortSignal.timeout's own timer doesn't keep Node's event loop alive.
 const hangingFetch = (url, init = {}) => new Promise((_, reject) => {
-  init.signal?.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })));
+  const keepAlive = setTimeout(() => {}, 10000);
+  init.signal?.addEventListener('abort', () => { clearTimeout(keepAlive); reject(Object.assign(new Error('aborted'), { name: 'AbortError' })); });
 });
 
 test('C1: withTimeout rejects a promise that never settles', async () => {
