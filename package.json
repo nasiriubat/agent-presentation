@@ -8,7 +8,7 @@
     "dev": "vite",
     "server": "node server/index.js",
     "stage": "concurrently -k -n web,api \"npm:dev\" \"npm:server\"",
-    "test": "node --test test/",
+    "test": "node --test",
     "qr": "node scripts/make-qr.mjs",
     "prebuild": "npm run qr",
     "build": "VITE_PUBLIC=1 vite build",
