@@ -5,6 +5,8 @@ import { RealtimeSession } from './session.js';
 import { FINALE_TOOLS, createHandlers } from './tools.js';
 import { ReplayRecorder } from './recorder.js';
 import { api as defaultApi } from '../core/api.js';
+import { createNegotiator } from './negotiate.js';
+import { exitGate } from './exitGate.js';
 
 const BASE = import.meta.env?.BASE_URL ?? '/';
 const asset = (p) => `${BASE}${p}`;
@@ -24,6 +26,7 @@ const loadJson = (p) => fetch(asset(p)).then((r) => { if (!r.ok) throw new Error
 
 export function mountFinale(container, { mode = 'replay', who = 'aidul', api = defaultApi } = {}) {
   const board = new MissionBoard(container);
+  const leave = exitGate(1500);
   let session, recorder, ctx, mixDest, replay, finished = false, started = false;
 
   const audioCtx = () => {
@@ -49,40 +52,19 @@ export function mountFinale(container, { mode = 'replay', who = 'aidul', api = d
     });
   }
 
-  // Streams the two-agent call from the server and plays each turn in order.
-  function negotiate(request) {
-    return new Promise((resolve) => {
-      session?.hold();
-      board.negotiationStart();
-      const queue = [];
-      let booking, fallback, ended = false, playing = false;
-      const finish = () => {
-        board.negotiationEnd();
-        session?.release();
-        resolve({ booking, fallback });
-      };
-      const pump = async () => {
-        if (playing) return;
-        playing = true;
-        while (queue.length) {
-          const t = queue.shift();
-          board.negotiationTurn(t.speaker, t.text);
-          try { await playClip(t.audioBase64); } catch { await new Promise((r) => setTimeout(r, 2500)); }
-        }
-        playing = false;
-        if (ended) finish();
-      };
-      api.sse('/api/negotiate', { request }, (e) => {
-        if (e.type === 'negotiation.turn') { queue.push(e); pump(); }
-        else if (e.type === 'negotiation.done') { booking = e.booking; fallback = e.fallback; }
-        else if (e.type === 'done' || e.type === 'error') {
-          ended = true;
-          if (!booking) booking = { restaurant: request.restaurant, time: '20:30', seating: 'indoors', partySize: request.partySize, vegetarian: true };
-          if (!playing) finish();
-        }
-      });
-    });
+  async function playUrl(url) {
+    const res = await fetch(asset(url));
+    const buf = new Uint8Array(await res.arrayBuffer());
+    let bin = '';
+    for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
+    await playClip(btoa(bin));
   }
+
+  const negotiate = createNegotiator({
+    api, board, playBase64: playClip, playUrl,
+    loadFallback: () => loadJson('replays/negotiation-fallback.json'),
+    hold: () => session?.hold(), release: () => session?.release(),
+  });
 
   async function startLive(instructions = FINALE_INSTRUCTIONS, withTools = true) {
     const [restaurants, memory] = await Promise.all([loadJson('data/restaurants.json'), loadJson('data/finale-memory.json')]);
@@ -98,17 +80,25 @@ export function mountFinale(container, { mode = 'replay', who = 'aidul', api = d
       onToolCall: (name) => board.tool(name, true),
       onToolDone: (name) => board.tool(name, false),
       onState: (s) => board.micState(s),
+      onError: (message) => board.error(`Voice problem: ${message}`, { onUseReplay: useReplay }),
     });
     board.onMute(() => session.mute(!session.userMuted));
     try {
       await session.connect();
     } catch (err) {
-      board.error(`Couldn't start the voice agent: ${err.message}`, { onUseReplay: () => { mode = 'replay'; startReplay(); } });
+      board.error(`Couldn't start the voice agent: ${err.message}`, { onUseReplay: useReplay });
       return;
     }
     audioCtx();
     if (session.remoteStream) ctx.createMediaStreamSource(session.remoteStream).connect(mixDest);
     ctx.createMediaStreamSource(session.mic).connect(mixDest);
+  }
+
+  function useReplay() {
+    session?.close();
+    session = null;
+    mode = 'replay';
+    startReplay();
   }
 
   async function startReplay() {
@@ -162,11 +152,12 @@ export function mountFinale(container, { mode = 'replay', who = 'aidul', api = d
     board,
     get finished() { return finished; },
     async arm() {},
-    // First press starts the demo; it stays on the slide until the run has finished.
+    // First press starts the demo; it stays on the slide until the run has finished,
+    // or the presenter presses → twice quickly (escape hatch if the agent never finishes).
     async step() {
       audioCtx().resume().catch(() => {}); // created inside the presenter's key press or click
-      if (!started) { started = true; mode === 'live' ? await startLive() : startReplay(); return true; }
-      return !finished;
+      if (!started) { started = true; leave(); mode === 'live' ? await startLive() : startReplay(); return true; }
+      return !(finished || leave());
     },
     async autoplay() { started = true; await startReplay(); },
     startQa: () => startLive(QA_INSTRUCTIONS, false),

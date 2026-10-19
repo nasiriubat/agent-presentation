@@ -9,4 +9,5 @@ app.use(express.json({ limit: '1mb' }));
 app.use(createRouter({ env: process.env }));
 
 const port = Number(process.env.PORT ?? 8787);
-app.listen(port, () => console.log(`agent server on http://localhost:${port}`));
+// localhost only: nobody else on the venue Wi-Fi can buzz phones or spend the API budget
+app.listen(port, '127.0.0.1', () => console.log(`agent server on http://localhost:${port}`));

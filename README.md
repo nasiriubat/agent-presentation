@@ -29,7 +29,8 @@ npm run stage           # web on http://localhost:5173, API on http://localhost:
 
 1. Open **http://localhost:5173/preflight.html**: every automatic check should be green. Then test Telegram, the mic and the speakers with the buttons.
 2. Open **http://localhost:5173/**. The top-right badge says **● LIVE** (click it to force **▶ REPLAY** if the network fails). **📱** picks whose phone buzzes.
-3. Speaker notes: press **S** for reveal's speaker view, or open **http://localhost:5173/?notes** on a phone.
+3. Speaker notes: open **http://localhost:5173/?notes** on a phone. Keep keyboard/clicker focus on the **main** deck window: reveal's speaker view (S) may let a press skip a running demo, so test that in rehearsal before relying on it.
+4. If the finale ever gets stuck, press → twice quickly to leave the slide.
 
 Keys: → / Space / PageDown = next (on a demo slide this steps the demo; the slide advances when the demo is done), ← / PageUp = back. Clickers work.
 

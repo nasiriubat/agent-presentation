@@ -15,9 +15,10 @@ export function createApi(base = 'http://localhost:8787') {
     }
   }
 
-  async function json(path, body, { method = body === undefined ? 'GET' : 'POST' } = {}) {
+  async function json(path, body, { method = body === undefined ? 'GET' : 'POST', timeoutMs = 10000 } = {}) {
     const res = await fetch(`${base}${path}`, {
       method,
+      signal: AbortSignal.timeout(timeoutMs),
       headers: body === undefined ? {} : { 'content-type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
     });

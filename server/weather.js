@@ -6,9 +6,9 @@ export const CACHED_FORECAST = Object.freeze({ tempC: 4, rainChancePct: 70, summ
 
 const avg = (xs) => Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10;
 
-export async function getEveningForecast({ fetch = globalThis.fetch } = {}) {
+export async function getEveningForecast({ fetch = globalThis.fetch, timeoutMs = 4000 } = {}) {
   try {
-    const res = await fetch(URL_TAMPERE);
+    const res = await fetch(URL_TAMPERE, { signal: AbortSignal.timeout(timeoutMs) });
     if (!res.ok) throw new Error('weather service error');
     const { hourly } = await res.json();
     const idx = hourly.time.map((t, i) => [Number(t.slice(11, 13)), i]).filter(([h]) => h >= 18 && h <= 21).map(([, i]) => i);

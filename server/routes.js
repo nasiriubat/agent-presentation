@@ -70,7 +70,8 @@ export function createRouter({ env, openai = createOpenAI({ apiKey: env.OPENAI_A
         emit: stream.send,
       });
     } catch (err) {
-      stream.send({ type: 'warn', text: `The agent stopped: ${err.message}` });
+      console.warn(`[agent] ${err.message}`);
+      stream.send({ type: 'answer', text: "Sorry, I couldn't reach the model just now.", error: true, step: true });
     }
     stream.end();
   });

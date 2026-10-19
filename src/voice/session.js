@@ -1,9 +1,12 @@
+import { withTimeout } from '../core/timeout.js';
+
 // A live speech-to-speech session with OpenAI Realtime over WebRTC, with tool calling.
 // The browser never sees our API key: the local server mints a short-lived one.
 
 export class RealtimeSession {
-  constructor({ api, tools, handlers, instructions, voice = 'marin', onTranscript, onToolCall, onToolDone, onState, onEvent }) {
-    Object.assign(this, { api, tools, handlers, instructions, voice });
+  constructor({ api, tools, handlers, instructions, voice = 'marin', onTranscript, onToolCall, onToolDone, onState, onEvent, onError, connectTimeoutMs = 12000 }) {
+    Object.assign(this, { api, tools, handlers, instructions, voice, connectTimeoutMs });
+    this.onError = onError ?? (() => {});
     this.onTranscript = onTranscript ?? (() => {});
     this.onToolCall = onToolCall ?? (() => {});
     this.onToolDone = onToolDone ?? (() => {});
@@ -13,7 +16,17 @@ export class RealtimeSession {
     this.holds = 0; // >0 while something (agent voice, negotiation) must not be heard by the mic
   }
 
+  // Gives up with a clear error instead of hanging (token, SDP or data channel can stall on venue Wi-Fi).
   async connect() {
+    try {
+      await withTimeout(this.open(), this.connectTimeoutMs, 'Connecting to the voice model took too long');
+    } catch (err) {
+      this.close();
+      throw err;
+    }
+  }
+
+  async open() {
     const secret = await this.api.json('/api/realtime/token', { instructions: this.instructions, tools: this.tools, voice: this.voice });
     const key = secret.value ?? secret.client_secret?.value;
     if (!key) throw new Error('No realtime key from the server');
@@ -27,7 +40,16 @@ export class RealtimeSession {
     this.pc.addTrack(this.micTrack, this.mic);
     this.dc = this.pc.createDataChannel('oai-events');
     this.dc.onmessage = (m) => this.handle(JSON.parse(m.data));
-    const opened = new Promise((resolve) => { this.dc.onopen = resolve; });
+    const opened = new Promise((resolve, reject) => {
+      this.dc.onopen = resolve;
+      this.pc.onconnectionstatechange = () => {
+        const s = this.pc.connectionState;
+        if (s === 'failed' || s === 'disconnected') {
+          reject(new Error(`voice connection ${s}`));
+          this.onError(`The voice connection ${s}.`);
+        }
+      };
+    });
 
     const offer = await this.pc.createOffer();
     await this.pc.setLocalDescription(offer);
@@ -49,6 +71,7 @@ export class RealtimeSession {
   // The user's mute button.
   mute(on) {
     this.userMuted = on;
+    if (!on) { this.holds = 0; this.speaking = false; } // unmuting is also the presenter's "un-stick the mic"
     this.applyMic();
   }
 
@@ -67,7 +90,7 @@ export class RealtimeSession {
     this.onEvent(e);
     switch (e.type) {
       case 'output_audio_buffer.started':
-        this.speaking = true; this.hold();
+        if (!this.speaking) { this.speaking = true; this.hold(); }
         break;
       case 'output_audio_buffer.stopped':
       case 'output_audio_buffer.cleared':
@@ -100,6 +123,7 @@ export class RealtimeSession {
       }
       case 'error':
         console.warn('[realtime]', e.error?.message ?? e);
+        this.onError(e.error?.message ?? 'voice error');
         break;
     }
   }

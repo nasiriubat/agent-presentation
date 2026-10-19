@@ -1,11 +1,12 @@
 // Thin wrapper over the three OpenAI endpoints the stage server needs.
 
-export function createOpenAI({ apiKey, fetch = globalThis.fetch, base = 'https://api.openai.com/v1' }) {
+export function createOpenAI({ apiKey, fetch = globalThis.fetch, base = 'https://api.openai.com/v1', timeoutMs = 25000 }) {
   async function post(path, body) {
     const res = await fetch(`${base}${path}`, {
       method: 'POST',
       headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(timeoutMs),
     });
     if (!res.ok) {
       const err = new Error(`OpenAI ${path} ${res.status}: ${await res.text()}`);

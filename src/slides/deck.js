@@ -4,6 +4,7 @@ import RevealNotes from 'reveal.js/plugin/notes/notes.esm.js';
 import 'reveal.js/dist/reveal.css';
 import './slides.css';
 import { liveAvailable, isPublic, forcedReplay, setForcedReplay } from '../core/modes.js';
+import { withTimeout } from '../core/timeout.js';
 
 const DEMOS = {
   coldopen: () => import('../demos/coldopen.js').then((m) => m.mount),
@@ -140,9 +141,13 @@ async function deckView() {
     if (busy) return;
     busy = true;
     try {
-      const demo = await demoFor(slide);
-      const more = await demo.step();
+      // a step that hangs (network) must never lock the clicker: give up waiting after 15 s
+      const demo = await withTimeout(demoFor(slide), 15000, 'demo load timed out');
+      const more = await withTimeout(demo.step(), 15000, 'demo step timed out').catch((err) => { console.warn(err.message); return true; });
       if (!more) Reveal.next();
+    } catch (err) {
+      console.warn(err.message);
+      mounted.delete(slide); // let the next press retry the mount
     } finally {
       busy = false;
     }

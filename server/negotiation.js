@@ -61,10 +61,11 @@ function parseReply(res) {
   return JSON.parse(text);
 }
 
-export async function runNegotiation({ openai, request, emit, now = Date.now, budgetMs = 40000, ttsTimeoutMs = 8000, fallbackDir }) {
+export async function runNegotiation({ openai, request, emit, now = Date.now, budgetMs = 40000, turnMs = 12000, ttsTimeoutMs = 8000, fallbackDir }) {
   const start = now();
   const transcript = [];
   let liveTurns = 0;
+  let lastSpeaker = null;
   let reason = 'no agreement within the turn limit';
 
   const ask = async (speaker) => {
@@ -91,9 +92,10 @@ export async function runNegotiation({ openai, request, emit, now = Date.now, bu
         const audio = await withDeadline(openai.tts({ text: reply.say, ...VOICES[speaker] }), ttsTimeoutMs)
           .catch(() => withDeadline(openai.tts({ text: reply.say, voice: BACKUP_VOICES[speaker], model: 'tts-1' }), ttsTimeoutMs));
         return { reply, audio };
-      })(), left);
+      })(), Math.min(left, turnMs));
       transcript.push({ speaker, text: reply.say });
       liveTurns++;
+      lastSpeaker = speaker;
       emit({ type: 'negotiation.turn', speaker, text: reply.say, audioBase64: audio.toString('base64') });
       if (speaker === 'restaurant' && reply.status === 'agreed' && reply.time && reply.seating) {
         const booking = { restaurant: request.restaurant, time: reply.time, seating: reply.seating, partySize: request.partySize, vegetarian: true };
@@ -107,7 +109,9 @@ export async function runNegotiation({ openai, request, emit, now = Date.now, bu
   }
 
   const fallback = JSON.parse(readFileSync(join(fallbackDir, 'negotiation-fallback.json'), 'utf8'));
-  const from = liveTurns < 2 ? 0 : 2;
+  // No live turns: the whole scripted call. Otherwise only its closing lines, starting with
+  // whoever did not speak last (turn 5 = caller confirms, turn 6 = host confirms).
+  const from = liveTurns === 0 ? 0 : lastSpeaker === 'yours' ? 5 : 4;
   for (let i = from; i < fallback.turns.length; i++) {
     const audio = readFileSync(join(fallbackDir, 'negotiation-fallback', `turn-${i + 1}.mp3`));
     emit({ type: 'negotiation.turn', ...fallback.turns[i], audioBase64: audio.toString('base64') });

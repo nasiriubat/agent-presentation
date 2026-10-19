@@ -46,12 +46,12 @@ test('a live agreement ends the call with the agreed booking', async () => {
   assert.deepEqual(done.booking, { restaurant: 'Ravintola Näsi', time: '20:30', seating: 'indoors', partySize: 8, vegetarian: true });
 });
 
-test('no agreement after 8 live turns hands over to fallback turns 3–6', async () => {
+test('no agreement after 8 live turns closes with fallback turns 5–6', async () => {
   const openai = fakeOpenAI({ restaurantSays: () => ({ say: 'Hmm.', status: 'open' }) });
   const { turns, done } = await run({ openai });
-  assert.equal(turns.length, 12);
-  assert.equal(turns[8].text, (await import('../public/replays/negotiation-fallback.json', { with: { type: 'json' } })).default.turns[2].text);
-  assert.equal(turns[8].audioBase64, Buffer.from('fallback-3').toString('base64'));
+  assert.equal(turns.length, 10);
+  assert.equal(turns[8].text, (await import('../public/replays/negotiation-fallback.json', { with: { type: 'json' } })).default.turns[4].text);
+  assert.equal(turns[8].audioBase64, Buffer.from('fallback-5').toString('base64'));
   assert.equal(done.fallback, true);
   assert.equal(done.booking.time, '20:30');
 });
@@ -64,15 +64,15 @@ test('an error on the first call plays the whole fallback', async () => {
   assert.equal(done.fallback, true);
 });
 
-test('running past the time budget switches to fallback turns 3–6', async () => {
+test('running past the time budget closes with fallback turns 5–6', async () => {
   let t = 0, turnsSoFar = 0;
   const openai = fakeOpenAI({ restaurantSays: () => ({ say: 'Hmm.', status: 'open' }) });
   const now = () => t;
   const events = [];
   await runNegotiation({ openai, request, now, fallbackDir: fallbackDir(), emit: (e) => { events.push(e); if (e.type === 'negotiation.turn' && ++turnsSoFar === 2) t += 41000; } });
   const turns = events.filter((e) => e.type === 'negotiation.turn');
-  assert.equal(turns.length, 6);
-  assert.equal(turns[2].audioBase64, Buffer.from('fallback-3').toString('base64'));
+  assert.equal(turns.length, 4);
+  assert.equal(turns[2].audioBase64, Buffer.from('fallback-5').toString('base64'));
   assert.equal(events.at(-1).fallback, true);
 });
 
@@ -118,4 +118,26 @@ test('a stuck speech request is retried once with tts-1 instead of failing the c
   await runNegotiation({ openai, request, ttsTimeoutMs: 50, fallbackDir: fallbackDir(), emit: (e) => events.push(e) });
   assert.equal(events.at(-1).fallback, false);
   assert.deepEqual(models.slice(0, 2), [undefined, 'tts-1']);
+});
+
+test('I3: one stalled turn hands over within the per-turn cap, not the whole budget', async () => {
+  const openai = { responses: () => new Promise(() => {}), tts: async () => Buffer.from('mp3') };
+  const t = Date.now();
+  const events = [];
+  await runNegotiation({ openai, request, budgetMs: 40000, turnMs: 80, fallbackDir: fallbackDir(), emit: (e) => events.push(e) });
+  assert.ok(Date.now() - t < 1000);
+  assert.equal(events.at(-1).fallback, true);
+});
+
+test('I4: after live turns, the fallback starts with the other speaker and only closes the call', async () => {
+  let n = 0;
+  const openai = {
+    responses: async (body) => { if (++n === 4) throw new Error('boom'); return { output_text: JSON.stringify(body.instructions.includes('host at Ravintola') ? { say: 'h', status: 'open', time: null, seating: null } : { say: 'c', accept: false }) }; },
+    tts: async () => Buffer.from('mp3'),
+  };
+  const events = [];
+  await runNegotiation({ openai, request, fallbackDir: fallbackDir(), emit: (e) => events.push(e) });
+  const turns = events.filter((e) => e.type === 'negotiation.turn');
+  assert.deepEqual(turns.map((t) => t.speaker), ['yours', 'restaurant', 'yours', 'restaurant']);
+  for (let i = 1; i < turns.length; i++) assert.notEqual(turns[i].speaker, turns[i - 1].speaker);
 });

@@ -29,10 +29,12 @@ export function toolmapDemo(container, { tools, panels = {}, tabs, mode = 'repla
   container.append(root);
   const body = root.querySelector('.demo-body');
   let tab = tabs[0], map, player, events = [], liveRun, liveEvents = [], stallTimer, overlayEl;
+  let liveState = null; // null | 'running' | 'done' — a live run replaces the replay on this tab
 
   async function setTab(t) {
     tab = t;
     liveRun?.abort();
+    liveState = null;
     root.querySelectorAll('[data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === t.id));
     body.innerHTML = '';
     map = new ToolMap(body, { tools: tools.map((x) => ({ ...x })), panels: { ...panels, memory: t.memory ?? panels.memory } });
@@ -64,6 +66,7 @@ export function toolmapDemo(container, { tools, panels = {}, tabs, mode = 'repla
     map.reset();
     liveEvents = [];
     root.classList.remove('demo-stalled');
+    liveState = 'running';
     const queue = [];
     let draining = false;
     const drain = async () => {
@@ -74,8 +77,9 @@ export function toolmapDemo(container, { tools, panels = {}, tabs, mode = 'repla
     };
     armStall();
     liveRun = api.sse(live.path, live.body(question), (e) => {
-      if (e.type === 'done') { clearTimeout(stallTimer); return; }
-      if (e.type === 'error') { root.classList.add('demo-stalled'); clearTimeout(stallTimer); return; }
+      if (e.type === 'done') { clearTimeout(stallTimer); liveState = 'done'; return; }
+      if (e.type === 'error') { root.classList.add('demo-stalled'); clearTimeout(stallTimer); liveState = 'done'; return; }
+      if (e.type === 'answer' && e.error) root.classList.add('demo-stalled');
       armStall();
       liveEvents.push(e);
       queue.push(e);
@@ -111,6 +115,8 @@ export function toolmapDemo(container, { tools, panels = {}, tabs, mode = 'repla
     // Advances one presenter step. Returns false when the current tab has finished.
     async step() {
       await ready;
+      if (liveState === 'running') return true; // don't replay over a live answer that is still coming
+      if (liveState === 'done') return false;
       if (dismissOverlay()) return true;
       if (player.done) {
         const i = tabs.indexOf(tab);
