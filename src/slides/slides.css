@@ -64,6 +64,7 @@ html, body, .reveal-viewport { margin:0; background:radial-gradient(ellipse at 5
 .qrs figcaption, .site-qr figcaption { font-size:.55em; color:var(--ink); margin-top:.3em; font-weight:600; }
 .site-qr img { width:9.5em; height:9.5em; background:#fff; border-radius:16px; padding:8px; margin:.4em auto 0; }
 
+[hidden] { display:none !important; }
 .mode-bar { position:fixed; right:14px; top:12px; z-index:50; display:flex; gap:8px; }
 .mode-bar button { border:0; border-radius:999px; padding:6px 12px; font:600 12px Inter, system-ui, sans-serif; cursor:pointer; background:#1e293b; color:#cbd5e1; opacity:.6; }
 .mode-bar button:hover { opacity:1; }
