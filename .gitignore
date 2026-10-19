@@ -4,3 +4,4 @@ dist/
 .superpowers/
 .DS_Store
 speaker/*.png
+.playwright-mcp/

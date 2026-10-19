@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tool map harness</title>
+<style>body{margin:0;background:#020617;color:#e2e8f0;font-family:system-ui;padding:16px} #m{height:min(70vh,720px)} button{margin:8px 8px 0 0;padding:8px 14px;border-radius:8px;border:0;background:#4338ca;color:#fff}</style></head>
+<body><div id="m"></div><button id="step">Step →</button><button id="auto">▶ Autoplay</button><button id="reset">Reset</button><button id="log">Log</button>
+<script type="module">
+import { ToolMap } from '/src/toolmap/toolmap.js';
+import { EventPlayer } from '/src/core/player.js';
+const [events, db, code] = await Promise.all([fetch('/replays/demo1-task1.json').then(r=>r.json()), fetch('/data/db.json').then(r=>r.json()), fetch('/data/pseudocode.txt').then(r=>r.text())]);
+const map = new ToolMap(document.getElementById('m'), {
+  tools: [{id:'search_notes',label:'Search notes',icon:'🔎'},{id:'calculator',label:'Calculator',icon:'🧮'},{id:'write_file',label:'Write file',icon:'📄'},{id:'memory',label:'Memory',icon:'🗂️',aliases:['save_memory','recall_memory']}],
+  panels: { db, memory: [], code },
+});
+let player = new EventPlayer(events, (e) => map.handle(e));
+step.onclick = () => player.step();
+auto.onclick = () => player.autoplay();
+reset.onclick = () => { player.reset(); map.reset(); };
+log.onclick = () => map.toggleLog();
+window.map = map; window.player = player;
+</script></body></html>

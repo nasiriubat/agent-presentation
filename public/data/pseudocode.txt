@@ -1,0 +1,8 @@
+while not done:
+    thought = model.think(question, memory, results)
+    if thought.wants_a_tool:
+        result = run(thought.tool, thought.input)
+        results.add(result)
+        if worth_keeping(result): memory.save(result)
+    else:
+        say(thought.answer); done = True

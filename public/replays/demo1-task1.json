@@ -1,0 +1,161 @@
+[
+ {
+  "type": "user",
+  "step": true,
+  "text": "What is the Atlas team's budget per person? Save a short summary and remember it.",
+  "t": 0
+ },
+ {
+  "type": "think",
+  "step": true,
+  "text": "I don't know this yet. I'll look up Atlas's budget and team size.",
+  "t": 2200
+ },
+ {
+  "type": "tool.call",
+  "id": "c1",
+  "tool": "search_notes",
+  "args": {
+   "query": "Atlas budget"
+  },
+  "t": 4400
+ },
+ {
+  "type": "tool.result",
+  "id": "c1",
+  "tool": "search_notes",
+  "result": "From the notes:\n- [budget_2026] Atlas budget: EUR 84,000 for 2026, approved in January.\n- [budget_2026] Budgets are per team, not per person.\n\nFrom the team table:\n- Atlas: budget EUR 84,000, 6 people, lead Sara Nieminen",
+  "rows": [
+   1
+  ],
+  "t": 5500
+ },
+ {
+  "type": "think",
+  "step": true,
+  "text": "That's per team. Atlas has 6 people, so I'll divide. No mental maths: calculator.",
+  "t": 6600
+ },
+ {
+  "type": "tool.call",
+  "id": "c2",
+  "tool": "calculator",
+  "args": {
+   "expression": "84000/6"
+  },
+  "t": 8800
+ },
+ {
+  "type": "tool.result",
+  "id": "c2",
+  "tool": "calculator",
+  "result": "14000",
+  "t": 9900
+ },
+ {
+  "type": "think",
+  "step": true,
+  "text": "I'll save a short summary file for you.",
+  "t": 11000
+ },
+ {
+  "type": "tool.call",
+  "id": "c3",
+  "tool": "write_file",
+  "args": {
+   "path": "atlas_summary.md",
+   "content": "Atlas 2026: EUR 84,000 for 6 people = EUR 14,000 per person."
+  },
+  "t": 13200
+ },
+ {
+  "type": "tool.result",
+  "id": "c3",
+  "tool": "write_file",
+  "result": "Saved atlas_summary.md (61 characters).",
+  "t": 14300
+ },
+ {
+  "type": "file.write",
+  "path": "atlas_summary.md",
+  "content": "Atlas 2026: EUR 84,000 for 6 people = EUR 14,000 per person.",
+  "public": false,
+  "t": 15400
+ },
+ {
+  "type": "think",
+  "step": true,
+  "text": "I'll remember this, so next time I don't have to redo the work.",
+  "t": 16500
+ },
+ {
+  "type": "tool.call",
+  "id": "c4",
+  "tool": "save_memory",
+  "args": {
+   "fact": "Atlas 2026 budget = EUR 14,000 per person (84,000 / 6)"
+  },
+  "t": 18700
+ },
+ {
+  "type": "tool.result",
+  "id": "c4",
+  "tool": "save_memory",
+  "result": "Saved to memory: Atlas 2026 budget = EUR 14,000 per person (84,000 / 6)",
+  "t": 19800
+ },
+ {
+  "type": "memory.save",
+  "fact": "Atlas 2026 budget = EUR 14,000 per person (84,000 / 6)",
+  "t": 20900
+ },
+ {
+  "type": "answer",
+  "step": true,
+  "text": "Atlas has EUR 14,000 per person. I saved atlas_summary.md and remembered the result.",
+  "t": 22000
+ },
+ {
+  "type": "section",
+  "step": true,
+  "title": "⏩ The next day, a new conversation",
+  "t": 24200
+ },
+ {
+  "type": "user",
+  "step": true,
+  "text": "Remind me: what does Atlas get per person?",
+  "t": 26400
+ },
+ {
+  "type": "think",
+  "step": true,
+  "text": "I may have saved this before. Memory first.",
+  "t": 28600
+ },
+ {
+  "type": "tool.call",
+  "id": "c5",
+  "tool": "recall_memory",
+  "args": {},
+  "t": 30800
+ },
+ {
+  "type": "tool.result",
+  "id": "c5",
+  "tool": "recall_memory",
+  "result": "- Atlas 2026 budget = EUR 14,000 per person (84,000 / 6)",
+  "t": 31900
+ },
+ {
+  "type": "memory.recall",
+  "fact": "Atlas 2026 budget = EUR 14,000 per person (84,000 / 6)",
+  "t": 33000
+ },
+ {
+  "type": "answer",
+  "step": true,
+  "text": "EUR 14,000 per person, straight from memory. One step instead of four.",
+  "t": 34100
+ }
+]
