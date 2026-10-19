@@ -1,0 +1,7 @@
+[
+  { "id": "nasi", "name": "Ravintola Näsi", "area": "City centre", "vegetarian": true, "pricePerPerson": 38, "terrace": true, "maxParty": 12, "x": 50, "y": 44 },
+  { "id": "tammela", "name": "Tammelan Tori", "area": "Tammela", "vegetarian": true, "pricePerPerson": 32, "terrace": false, "maxParty": 6, "x": 70, "y": 36 },
+  { "id": "pyynikki", "name": "Pyynikin Pöytä", "area": "Pyynikki", "vegetarian": false, "pricePerPerson": 42, "terrace": true, "maxParty": 10, "x": 24, "y": 58 },
+  { "id": "hatanpaa", "name": "Hatanpään Keittiö", "area": "Hatanpää", "vegetarian": true, "pricePerPerson": 47, "terrace": false, "maxParty": 14, "x": 58, "y": 78 },
+  { "id": "amuri", "name": "Amurin Grilli", "area": "Amuri", "vegetarian": false, "pricePerPerson": 35, "terrace": false, "maxParty": 10, "x": 34, "y": 40 }
+]

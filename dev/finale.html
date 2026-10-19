@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Finale harness</title>
+<style>body{margin:0;background:#020617;color:#e2e8f0;font-family:system-ui;padding:16px} #f{height:min(78vh,820px)} .bar{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center} button,select{padding:8px 14px;border-radius:8px;border:0;background:#4338ca;color:#fff;font:inherit}</style></head>
+<body><div id="f"></div>
+<div class="bar"><select id="who"><option value="aidul">Buzz Aidul</option><option value="nasir">Buzz Nasir</option></select>
+<button id="live">🎙️ Connect live</button><button id="rec">⏺ Record</button><button id="stop">⏹ Stop & download</button><button id="replay">▶ Replay</button><button id="qa">❓ Q&amp;A</button><button id="reset">Reset</button></div>
+<script type="module">
+import { mountFinale } from '/src/voice/finale.js';
+let f;
+const mount = (mode) => { document.getElementById('f').innerHTML = ''; f = mountFinale(document.getElementById('f'), { mode, who: who.value }); window.f = f; return f; };
+mount('replay');
+live.onclick = () => mount('live').step();
+replay.onclick = () => mount('replay').step();
+qa.onclick = () => mount('live').startQa();
+rec.onclick = () => f.startRecording();
+stop.onclick = () => f.stopRecording();
+reset.onclick = () => f.reset();
+</script></body></html>

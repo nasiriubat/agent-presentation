@@ -17,8 +17,8 @@ export function createOpenAI({ apiKey, fetch = globalThis.fetch, base = 'https:/
 
   return {
     responses: async (body) => (await post('/responses', body)).json(),
-    tts: async ({ text, voice, instructions }) =>
-      Buffer.from(await (await post('/audio/speech', { model: 'gpt-4o-mini-tts', input: text, voice, instructions, response_format: 'mp3' })).arrayBuffer()),
+    tts: async ({ text, voice, instructions, model = 'gpt-4o-mini-tts' }) =>
+      Buffer.from(await (await post('/audio/speech', { model, input: text, voice, ...(instructions ? { instructions } : {}), response_format: 'mp3' })).arrayBuffer()),
     clientSecret: async (body) => (await post('/realtime/client_secrets', body)).json(),
   };
 }

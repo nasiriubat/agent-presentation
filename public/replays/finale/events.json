@@ -1,0 +1,383 @@
+[
+ {
+  "t": 0,
+  "m": "micState",
+  "a": [
+   "listening"
+  ]
+ },
+ {
+  "t": 400,
+  "m": "memory",
+  "a": [
+   [
+    "Team size: 8 people",
+    "Mikko is vegetarian",
+    "Team dinner budget: €40 per person"
+   ],
+   null
+  ]
+ },
+ {
+  "t": 1600,
+  "m": "transcript",
+  "a": [
+   "user",
+   "Plan a dinner for my team tonight."
+  ]
+ },
+ {
+  "t": 3400,
+  "m": "micState",
+  "a": [
+   "speaking"
+  ]
+ },
+ {
+  "t": 3600,
+  "m": "transcript",
+  "a": [
+   "assistant",
+   "On it. First, let me check what I remember about your team."
+  ]
+ },
+ {
+  "t": 5400,
+  "m": "tool",
+  "a": [
+   "recall_memory",
+   true
+  ]
+ },
+ {
+  "t": 5700,
+  "m": "memory",
+  "a": [
+   [
+    "Team size: 8 people",
+    "Mikko is vegetarian",
+    "Team dinner budget: €40 per person"
+   ],
+   "all"
+  ]
+ },
+ {
+  "t": 6600,
+  "m": "tool",
+  "a": [
+   "recall_memory",
+   false
+  ]
+ },
+ {
+  "t": 7200,
+  "m": "transcript",
+  "a": [
+   "assistant",
+   "Eight people, one vegetarian, forty euros a head. Searching restaurants."
+  ]
+ },
+ {
+  "t": 9000,
+  "m": "tool",
+  "a": [
+   "search_restaurants",
+   true
+  ]
+ },
+ {
+  "t": 9300,
+  "m": "pins",
+  "a": [
+   [
+    {
+     "id": "nasi",
+     "name": "Ravintola Näsi",
+     "area": "City centre",
+     "vegetarian": true,
+     "pricePerPerson": 38,
+     "terrace": true,
+     "maxParty": 12,
+     "x": 50,
+     "y": 44
+    },
+    {
+     "id": "tammela",
+     "name": "Tammelan Tori",
+     "area": "Tammela",
+     "vegetarian": true,
+     "pricePerPerson": 32,
+     "terrace": false,
+     "maxParty": 6,
+     "x": 70,
+     "y": 36
+    },
+    {
+     "id": "pyynikki",
+     "name": "Pyynikin Pöytä",
+     "area": "Pyynikki",
+     "vegetarian": false,
+     "pricePerPerson": 42,
+     "terrace": true,
+     "maxParty": 10,
+     "x": 24,
+     "y": 58
+    },
+    {
+     "id": "hatanpaa",
+     "name": "Hatanpään Keittiö",
+     "area": "Hatanpää",
+     "vegetarian": true,
+     "pricePerPerson": 47,
+     "terrace": false,
+     "maxParty": 14,
+     "x": 58,
+     "y": 78
+    },
+    {
+     "id": "amuri",
+     "name": "Amurin Grilli",
+     "area": "Amuri",
+     "vegetarian": false,
+     "pricePerPerson": 35,
+     "terrace": false,
+     "maxParty": 10,
+     "x": 34,
+     "y": 40
+    }
+   ],
+   [
+    "nasi"
+   ]
+  ]
+ },
+ {
+  "t": 10500,
+  "m": "tool",
+  "a": [
+   "search_restaurants",
+   false
+  ]
+ },
+ {
+  "t": 11000,
+  "m": "transcript",
+  "a": [
+   "assistant",
+   "Ravintola Näsi fits. Checking the weather for a terrace."
+  ]
+ },
+ {
+  "t": 12500,
+  "m": "tool",
+  "a": [
+   "get_weather",
+   true
+  ]
+ },
+ {
+  "t": 12900,
+  "m": "weather",
+  "a": [
+   {
+    "tempC": 4,
+    "rainChancePct": 70,
+    "summary": "Rain likely this evening",
+    "cached": false
+   }
+  ]
+ },
+ {
+  "t": 13700,
+  "m": "tool",
+  "a": [
+   "get_weather",
+   false
+  ]
+ },
+ {
+  "t": 14200,
+  "m": "transcript",
+  "a": [
+   "assistant",
+   "Rain is likely, so indoors. I'll call the restaurant's agent now."
+  ]
+ },
+ {
+  "t": 15800,
+  "m": "tool",
+  "a": [
+   "call_restaurant",
+   true
+  ]
+ },
+ {
+  "t": 16000,
+  "m": "negotiationStart",
+  "a": []
+ },
+ {
+  "t": 16400,
+  "m": "negotiationTurn",
+  "a": [
+   "yours",
+   "Hi, I'm calling on behalf of a team of eight. Could we get a table tonight at seven?"
+  ]
+ },
+ {
+  "t": 16400,
+  "m": "clip",
+  "a": [
+   "replays/negotiation-fallback/turn-1.mp3"
+  ]
+ },
+ {
+  "t": 22008,
+  "m": "negotiationTurn",
+  "a": [
+   "restaurant",
+   "Good evening! At seven we only have the terrace, or I can seat you indoors at half past eight."
+  ]
+ },
+ {
+  "t": 22008,
+  "m": "clip",
+  "a": [
+   "replays/negotiation-fallback/turn-2.mp3"
+  ]
+ },
+ {
+  "t": 28456,
+  "m": "negotiationTurn",
+  "a": [
+   "yours",
+   "For a group of eight, indoors at half past eight sounds better. Do you have a vegetarian option?"
+  ]
+ },
+ {
+  "t": 28456,
+  "m": "clip",
+  "a": [
+   "replays/negotiation-fallback/turn-3.mp3"
+  ]
+ },
+ {
+  "t": 34808,
+  "m": "negotiationTurn",
+  "a": [
+   "restaurant",
+   "Absolutely, our vegetarian menu is three courses, about thirty-eight euros per person."
+  ]
+ },
+ {
+  "t": 34808,
+  "m": "clip",
+  "a": [
+   "replays/negotiation-fallback/turn-4.mp3"
+  ]
+ },
+ {
+  "t": 40608,
+  "m": "negotiationTurn",
+  "a": [
+   "yours",
+   "Perfect, that fits our budget. Please book eight people indoors at eight thirty."
+  ]
+ },
+ {
+  "t": 40608,
+  "m": "clip",
+  "a": [
+   "replays/negotiation-fallback/turn-5.mp3"
+  ]
+ },
+ {
+  "t": 45928,
+  "m": "negotiationTurn",
+  "a": [
+   "restaurant",
+   "Done! Eight people, half past eight, indoors, with the vegetarian menu ready. See you tonight."
+  ]
+ },
+ {
+  "t": 45928,
+  "m": "clip",
+  "a": [
+   "replays/negotiation-fallback/turn-6.mp3"
+  ]
+ },
+ {
+  "t": 52396,
+  "m": "negotiationEnd",
+  "a": []
+ },
+ {
+  "t": 52596,
+  "m": "booking",
+  "a": [
+   {
+    "restaurant": "Ravintola Näsi",
+    "time": "20:30",
+    "seating": "indoors",
+    "partySize": 8,
+    "vegetarian": true
+   }
+  ]
+ },
+ {
+  "t": 52896,
+  "m": "tool",
+  "a": [
+   "call_restaurant",
+   false
+  ]
+ },
+ {
+  "t": 53296,
+  "m": "transcript",
+  "a": [
+   "assistant",
+   "Booked: Ravintola Näsi, 8:30 tonight, indoors. Sending the invite."
+  ]
+ },
+ {
+  "t": 54796,
+  "m": "tool",
+  "a": [
+   "send_invite",
+   true
+  ]
+ },
+ {
+  "t": 55596,
+  "m": "invite",
+  "a": [
+   {
+    "delivered": true
+   }
+  ]
+ },
+ {
+  "t": 55896,
+  "m": "tool",
+  "a": [
+   "send_invite",
+   false
+  ]
+ },
+ {
+  "t": 56496,
+  "m": "transcript",
+  "a": [
+   "assistant",
+   "Done. Check your phone, the invite is there."
+  ]
+ },
+ {
+  "t": 57996,
+  "m": "micState",
+  "a": [
+   "listening"
+  ]
+ }
+]

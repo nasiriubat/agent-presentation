@@ -48,6 +48,9 @@ Tonight: 19:00 is available only on the terrace; 20:30 is available indoors. A v
 Be friendly, max 2 short sentences, spoken style. Always speak English.
 Set status "agreed" only after the caller has accepted a concrete time and seating; then fill time ("19:00" or "20:30") and seating. Otherwise status "open" and time/seating null.`;
 
+// tts-1 is the backup when a gpt-4o-mini-tts request stalls; it has its own voice names.
+const BACKUP_VOICES = { yours: 'nova', restaurant: 'onyx' };
+
 const VOICES = {
   yours: { voice: 'marin', instructions: 'Friendly, efficient personal assistant on a phone call.' },
   restaurant: { voice: 'cedar', instructions: 'Warm, quick restaurant host on the phone, speaking English.' },
@@ -58,10 +61,11 @@ function parseReply(res) {
   return JSON.parse(text);
 }
 
-export async function runNegotiation({ openai, request, emit, now = Date.now, budgetMs = 40000, fallbackDir }) {
+export async function runNegotiation({ openai, request, emit, now = Date.now, budgetMs = 40000, ttsTimeoutMs = 8000, fallbackDir }) {
   const start = now();
   const transcript = [];
   let liveTurns = 0;
+  let reason = 'no agreement within the turn limit';
 
   const ask = async (speaker) => {
     const isYours = speaker === 'yours';
@@ -84,7 +88,9 @@ export async function runNegotiation({ openai, request, emit, now = Date.now, bu
       const speaker = n % 2 === 0 ? 'yours' : 'restaurant';
       const { reply, audio } = await withDeadline((async () => {
         const reply = await ask(speaker);
-        return { reply, audio: await openai.tts({ text: reply.say, ...VOICES[speaker] }) };
+        const audio = await withDeadline(openai.tts({ text: reply.say, ...VOICES[speaker] }), ttsTimeoutMs)
+          .catch(() => withDeadline(openai.tts({ text: reply.say, voice: BACKUP_VOICES[speaker], model: 'tts-1' }), ttsTimeoutMs));
+        return { reply, audio };
       })(), left);
       transcript.push({ speaker, text: reply.say });
       liveTurns++;
@@ -95,8 +101,9 @@ export async function runNegotiation({ openai, request, emit, now = Date.now, bu
         return { agreed: true, booking, fallback: false };
       }
     }
-  } catch {
-    // fall through to the scripted ending
+  } catch (err) {
+    reason = err.message; // fall through to the scripted ending
+    console.warn(`[negotiation] fallback: ${reason}`);
   }
 
   const fallback = JSON.parse(readFileSync(join(fallbackDir, 'negotiation-fallback.json'), 'utf8'));
@@ -105,6 +112,6 @@ export async function runNegotiation({ openai, request, emit, now = Date.now, bu
     const audio = readFileSync(join(fallbackDir, 'negotiation-fallback', `turn-${i + 1}.mp3`));
     emit({ type: 'negotiation.turn', ...fallback.turns[i], audioBase64: audio.toString('base64') });
   }
-  emit({ type: 'negotiation.done', agreed: true, booking: fallback.booking, fallback: true });
+  emit({ type: 'negotiation.done', agreed: true, booking: fallback.booking, fallback: true, reason });
   return { agreed: true, booking: fallback.booking, fallback: true };
 }

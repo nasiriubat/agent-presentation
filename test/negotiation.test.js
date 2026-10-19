@@ -99,3 +99,23 @@ test('both agents are told to speak English', async () => {
   assert.equal(seen.length, 2);
   for (const s of seen) assert.match(s, /Always speak English/);
 });
+
+test('the fallback says why it took over', async () => {
+  const openai = fakeOpenAI({ restaurantSays: () => ({ say: 'x', status: 'open' }), throwOn: 0 });
+  const { done } = await run({ openai });
+  assert.equal(done.reason, 'boom');
+});
+
+test('a stuck speech request is retried once with tts-1 instead of failing the call', async () => {
+  let ttsCalls = 0;
+  const models = [];
+  const openai = {
+    responses: async (body) => ({ output_text: JSON.stringify(body.instructions.includes('host at Ravintola')
+      ? { say: 'Booked.', status: 'agreed', time: '20:30', seating: 'indoors' } : { say: 'Eight at 8:30 please.', accept: true }) }),
+    tts: (args) => { models.push(args.model); return ttsCalls++ === 0 ? new Promise(() => {}) : Promise.resolve(Buffer.from('mp3')); },
+  };
+  const events = [];
+  await runNegotiation({ openai, request, ttsTimeoutMs: 50, fallbackDir: fallbackDir(), emit: (e) => events.push(e) });
+  assert.equal(events.at(-1).fallback, false);
+  assert.deepEqual(models.slice(0, 2), [undefined, 'tts-1']);
+});
