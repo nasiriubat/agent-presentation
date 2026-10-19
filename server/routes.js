@@ -37,6 +37,17 @@ export function createRouter({ env, openai = createOpenAI({ apiKey: env.OPENAI_A
     res.json({ ok: true, live: true });
   });
 
+  // Pre-flight: does the key work, is Telegram set up?
+  router.get('/api/selftest', async (req, res) => {
+    const telegramConfigured = Boolean(env.TELEGRAM_BOT_TOKEN && (env.TELEGRAM_CHAT_ID_AIDUL || env.TELEGRAM_CHAT_ID_NASIR));
+    try {
+      await openai.responses({ model: 'gpt-6-luna', input: 'Reply with: ok', store: false });
+      res.json({ openai: true, telegramConfigured });
+    } catch (err) {
+      res.json({ openai: false, error: err.message, telegramConfigured });
+    }
+  });
+
   router.post('/api/chat/plain', async (req, res) => {
     try {
       const r = await openai.responses({ model: 'gpt-6-luna', instructions: PLAIN_SYSTEM, input: String(req.body.text ?? ''), store: false });

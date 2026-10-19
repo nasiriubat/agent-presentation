@@ -1,5 +1,35 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Stage preflight</title></head>
-<body><h1>Preflight</h1></body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stage preflight</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛫</text></svg>">
+  <style>
+    :root { color-scheme:dark; }
+    body { margin:0; background:#060a18; color:#e2e8f0; font:16px/1.5 Inter, system-ui, sans-serif; }
+    main { max-width:820px; margin:0 auto; padding:24px 16px 60px; }
+    h1 { margin:0 0 4px; } p.sub { color:#94a3b8; margin:0 0 20px; }
+    .check { display:flex; gap:12px; align-items:center; padding:12px 14px; background:#0f172a; border-radius:12px; margin-bottom:8px; flex-wrap:wrap; }
+    .check .st { width:1.6em; text-align:center; font-size:1.2em; }
+    .check .name { flex:1; min-width:12em; font-weight:600; }
+    .check .detail { width:100%; color:#94a3b8; font-size:.9em; padding-left:2.4em; white-space:pre-wrap; word-break:break-word; }
+    button, select { border:0; border-radius:10px; padding:8px 12px; background:#4338ca; color:#fff; font:inherit; cursor:pointer; }
+    .meter { width:160px; height:10px; background:#1e293b; border-radius:5px; overflow:hidden; } .meter i { display:block; height:100%; width:0; background:#4ade80; }
+    .bar { display:flex; gap:8px; margin:16px 0; flex-wrap:wrap; align-items:center; }
+    a { color:#a5b4fc; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>🛫 Stage preflight</h1>
+    <p class="sub">Run this on the presentation laptop before the talk, with <code>npm run stage</code> running. Then open <a href="./">the deck</a> (<a href="./?notes">notes for your phone</a>).</p>
+    <div class="bar">
+      <button id="rerun" type="button">Run all checks again</button>
+      <label><input type="checkbox" id="force"> Force REPLAY mode (no network needed)</label>
+    </div>
+    <div id="checks"></div>
+  </main>
+  <script type="module" src="/src/preflight.js"></script>
+</body>
 </html>
