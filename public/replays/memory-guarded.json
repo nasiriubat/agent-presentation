@@ -1,0 +1,90 @@
+[
+ {
+  "type": "user",
+  "step": true,
+  "text": "Marketing wants to announce the Project Orion launch date in tomorrow's newsletter. What date should they announce?",
+  "t": 0
+ },
+ {
+  "type": "think",
+  "step": true,
+  "text": "Memory first, but I must verify anything I use from it.",
+  "t": 2400
+ },
+ {
+  "type": "tool.call",
+  "id": "m1",
+  "tool": "read_memory",
+  "args": {},
+  "t": 4800
+ },
+ {
+  "type": "tool.result",
+  "id": "m1",
+  "tool": "read_memory",
+  "result": "- Project Orion launch date: 2026-10-15 (source: planner-bot auto-summary, recorded 2026-05-12)",
+  "t": 6000
+ },
+ {
+  "type": "memory.recall",
+  "fact": "Project Orion launch date: 2026-10-15.",
+  "t": 7200
+ },
+ {
+  "type": "think",
+  "step": true,
+  "text": "That entry is five months old and came from a bot. Checking the project notes.",
+  "t": 8400
+ },
+ {
+  "type": "tool.call",
+  "id": "m2",
+  "tool": "search_notes",
+  "args": {
+   "query": "Orion launch"
+  },
+  "t": 10800
+ },
+ {
+  "type": "tool.result",
+  "id": "m2",
+  "tool": "search_notes",
+  "result": "2026-09-22 PM sync (Priya Shah): the security review found two blockers, so the Orion launch moved to 2026-11-03.\nConfirmed by Priya on 2026-09-23.",
+  "t": 12000
+ },
+ {
+  "type": "warn",
+  "step": true,
+  "text": "Conflict: memory says 15 Oct, but the notes from 22 Sep say the launch moved to 3 Nov.",
+  "t": 13200
+ },
+ {
+  "type": "tool.call",
+  "id": "m3",
+  "tool": "write_memory",
+  "args": {
+   "fact": "Project Orion launch date: 2026-11-03",
+   "source": "orion_status, PM sync 2026-09-22"
+  },
+  "t": 15600
+ },
+ {
+  "type": "tool.result",
+  "id": "m3",
+  "tool": "write_memory",
+  "result": "Saved to memory.",
+  "t": 16800
+ },
+ {
+  "type": "memory.save",
+  "fact": "Project Orion launch date: 2026-11-03",
+  "source": "orion_status, PM sync 2026-09-22",
+  "t": 18000
+ },
+ {
+  "type": "answer",
+  "step": true,
+  "text": "Announce 3 November 2026. Memory said 15 October, but that was outdated; I corrected it.",
+  "t": 19200
+ }
+]

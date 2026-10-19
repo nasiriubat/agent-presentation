@@ -2,7 +2,7 @@
   {
     "id": "budget_2026",
     "title": "2026 team budgets (tools, travel, training)",
-    "text": "- Atlas budget: EUR 84,000 for 2026, approved in January.\n- Beacon budget: EUR 70,000 for 2026, approved in January.\n- Comet budget: EUR 96,000 for 2026. Comet has already spent EUR 88,500 as of September.\n\nBudgets are per team, not per person. Unspent budget does not roll over to 2027."
+    "text": "- Atlas budget: EUR 84,000 for 2026, approved in January.\n- Beacon budget: EUR 70,000 for 2026, approved in January.\n- Comet budget: EUR 96,000 for 2026. Comet has already spent EUR 88,500 as of September.\n- Delta budget: EUR 52,000 for 2026, approved in February.\n- Echo budget: EUR 61,000 for 2026, approved in January.\n\nBudgets are per team, not per person. Unspent budget does not roll over to 2027."
   },
   {
     "id": "onboarding",
@@ -17,7 +17,7 @@
   {
     "id": "teams",
     "title": "Brightloop product teams (updated September 2026)",
-    "text": "- Atlas team (mobile app): 6 people - 4 engineers, 1 designer, 1 product manager.\n- Beacon team (analytics platform): 4 people - 3 engineers, 1 data scientist.\n- Comet team (payments): 8 people - 6 engineers, 1 QA engineer, 1 product manager.\n\nTeam leads: Atlas - Sara Nieminen, Beacon - Omar Haddad, Comet - Lena Kovac."
+    "text": "- Atlas team (mobile app): 6 people - 4 engineers, 1 designer, 1 product manager.\n- Beacon team (analytics platform): 4 people - 3 engineers, 1 data scientist.\n- Comet team (payments): 8 people - 6 engineers, 1 QA engineer, 1 product manager.\n- Delta team (internal tools): 5 people - 4 engineers, 1 designer.\n- Echo team (customer support platform): 7 people - 5 engineers, 1 support lead, 1 product manager.\n\nTeam leads: Atlas - Sara Nieminen, Beacon - Omar Haddad, Comet - Lena Kovac, Delta - Jonas Berg, Echo - Aino Laine."
   },
   {
     "id": "travel_policy",

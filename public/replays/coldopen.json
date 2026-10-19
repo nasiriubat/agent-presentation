@@ -1,0 +1,14 @@
+[
+ {
+  "type": "user",
+  "step": true,
+  "text": "Book a dinner for my team tonight.",
+  "t": 0
+ },
+ {
+  "type": "answer",
+  "step": true,
+  "text": "I can't book anything for you: I can only answer with text. If you tell me your city, team size and preferred time, I can suggest places or draft a reservation message.",
+  "t": 2400
+ }
+]

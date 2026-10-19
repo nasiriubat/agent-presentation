@@ -1,5 +1,5 @@
 .tm { --tm-bg:#0b1020; --tm-node:#1e293b; --tm-line:#334155; --tm-hot:#fbbf24; --tm-agent:#4338ca; --tm-text:#e2e8f0; --tm-dim:#94a3b8;
-  display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); gap:14px; width:100%; height:100%; color:var(--tm-text);
+  display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); grid-template-rows:minmax(0,1fr); gap:14px; width:100%; height:100%; color:var(--tm-text);
   font-family:Inter, system-ui, sans-serif; text-align:left; position:relative; }
 .tm.tm-no-side { grid-template-columns:1fr; }
 .tm-stage { position:relative; background:radial-gradient(circle at 50% 45%, #1e1b4b, var(--tm-bg) 70%); border-radius:18px; overflow:hidden; min-height:320px; font-size:clamp(11px,1.15vw,20px); }
@@ -31,6 +31,7 @@
 .tm-overlay pre { white-space:pre-wrap; font-size:.85em; margin:.5em 0; }
 .tm-overlay-warn { background:#450a0a; border:2px solid #ef4444; color:#fecaca; }
 .tm-overlay-guard { background:#422006; border:2px solid #f59e0b; color:#fde68a; }
+.tm-overlay-public { background:#052e16; border:2px solid #4ade80; }
 .tm-overlay-approval { background:#0f172a; border:2px solid #38bdf8; }
 .tm-answer { font-weight:700; } .tm-answer.tm-y { color:#4ade80; } .tm-answer.tm-n { color:#f87171; }
 .tm-side { display:flex; flex-direction:column; gap:10px; min-width:0; overflow:auto; font-size:clamp(10px,.95vw,17px); }

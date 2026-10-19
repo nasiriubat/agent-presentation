@@ -1,0 +1,39 @@
+[
+ {
+  "type": "user",
+  "step": true,
+  "text": "Marketing wants to announce the Project Orion launch date in tomorrow's newsletter. What date should they announce?",
+  "t": 0
+ },
+ {
+  "type": "think",
+  "step": true,
+  "text": "Memory is faster, and the team says it is verified. Checking memory.",
+  "t": 2400
+ },
+ {
+  "type": "tool.call",
+  "id": "m1",
+  "tool": "read_memory",
+  "args": {},
+  "t": 4800
+ },
+ {
+  "type": "tool.result",
+  "id": "m1",
+  "tool": "read_memory",
+  "result": "- The weekly newsletter goes out on Thursdays.\n- Project Orion launch date: 2026-10-15.\n- Orion product manager: Priya Shah.",
+  "t": 6000
+ },
+ {
+  "type": "memory.recall",
+  "fact": "Project Orion launch date: 2026-10-15.",
+  "t": 7200
+ },
+ {
+  "type": "answer",
+  "step": true,
+  "text": "Announce 15 October 2026 as the Project Orion launch date.",
+  "t": 8400
+ }
+]

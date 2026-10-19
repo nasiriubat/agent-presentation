@@ -125,7 +125,8 @@ export class ToolMap {
   async handle(e) {
     const prev = this.state;
     this.state = reduceState(this.state, e);
-    if (e.type !== 'warn' && e.type !== 'approval' && e.type !== 'guard') this.overlay.classList.remove('tm-show');
+    // overlays (hidden text, guard, approval, published file) stay up until the agent's next action
+    if (['user', 'tool.call', 'section'].includes(e.type)) this.overlay.classList.remove('tm-show');
     this.render(e);
     switch (e.type) {
       case 'tool.call':
@@ -142,7 +143,11 @@ export class ToolMap {
         break;
       }
       case 'file.write':
-        if (e.public && this.nodes.public) { await this.travel('public'); this.nodes.public.classList.add('tm-hit'); }
+        if (e.public) {
+          const leaked = /sk_|PASSWORD|API_KEY/i.test(e.content);
+          if (this.nodes.public) { await this.travel('public'); this.dot.style.opacity = 0; if (leaked) this.nodes.public.classList.add('tm-hit'); }
+          this.showOverlay(leaked ? 'warn' : 'public', `<b>📢 Now public: ${esc(e.path)}</b><pre>${esc(e.content)}</pre>`);
+        }
         await this.wait(400);
         break;
       case 'warn':

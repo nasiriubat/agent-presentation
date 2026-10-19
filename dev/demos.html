@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Demos harness</title>
+<style>body{margin:0;background:#020617;color:#e2e8f0;font-family:system-ui;padding:16px} #d{height:min(80vh,820px)} select,button{padding:8px 12px;border-radius:8px;border:0;background:#4338ca;color:#fff;margin:0 6px 10px 0}</style></head>
+<body><select id="pick"><option>coldopen</option><option>demo1</option><option>memory</option><option>demo2</option></select><select id="mode"><option>replay</option><option>live</option></select><button id="go">Mount</button><button id="step">Step →</button><div id="d"></div>
+<script type="module">
+const mods = { coldopen: () => import('/src/demos/coldopen.js'), demo1: () => import('/src/demos/demo1.js'), memory: () => import('/src/demos/memory.js'), demo2: () => import('/src/demos/demo2.js') };
+let demo;
+go.onclick = async () => { d.innerHTML = ''; demo = await (await mods[pick.value]()).mount(d, { mode: mode.value }); window.demo = demo; };
+step.onclick = async () => console.log('step ->', await demo.step());
+const q = new URLSearchParams(location.search);
+if (q.get('demo')) { pick.value = q.get('demo'); mode.value = q.get('mode') ?? 'replay'; go.click(); }
+</script></body></html>
