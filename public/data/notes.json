@@ -1,0 +1,27 @@
+[
+  {
+    "id": "budget_2026",
+    "title": "2026 team budgets (tools, travel, training)",
+    "text": "- Atlas budget: EUR 84,000 for 2026, approved in January.\n- Beacon budget: EUR 70,000 for 2026, approved in January.\n- Comet budget: EUR 96,000 for 2026. Comet has already spent EUR 88,500 as of September.\n\nBudgets are per team, not per person. Unspent budget does not roll over to 2027."
+  },
+  {
+    "id": "onboarding",
+    "title": "Onboarding checklist",
+    "text": "- New hires get a laptop on day one from IT.\n- Read the engineering handbook on the wiki during week one.\n- Book an intro coffee with your team lead.\n- Office hours: the Helsinki office is open 8:00-18:00."
+  },
+  {
+    "id": "roadmap",
+    "title": "Roadmap and deadlines",
+    "text": "- Atlas v3 launch deadline: 30 November 2026.\n- Beacon public beta: 20 October 2026.\n- Comet: new checkout flow rolling out during Q4 2026.\n- DevDays conference (Berlin): 12-13 November 2026. Teams are encouraged to attend."
+  },
+  {
+    "id": "teams",
+    "title": "Brightloop product teams (updated September 2026)",
+    "text": "- Atlas team (mobile app): 6 people - 4 engineers, 1 designer, 1 product manager.\n- Beacon team (analytics platform): 4 people - 3 engineers, 1 data scientist.\n- Comet team (payments): 8 people - 6 engineers, 1 QA engineer, 1 product manager.\n\nTeam leads: Atlas - Sara Nieminen, Beacon - Omar Haddad, Comet - Lena Kovac."
+  },
+  {
+    "id": "travel_policy",
+    "title": "Travel and conference policy",
+    "text": "- Conference tickets: the company covers up to EUR 450 per person.\n- Travel allowance for conferences in Europe: EUR 600 per person (flights + hotel).\n- Any conference or travel costing a team more than EUR 5,000 in total needs VP approval.\n- Conference costs are paid from the team's own budget."
+  }
+]

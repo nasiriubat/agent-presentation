@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "team": "Atlas",
+    "budget_eur": 84000,
+    "people": 6,
+    "lead": "Sara Nieminen"
+  },
+  {
+    "id": 2,
+    "team": "Beacon",
+    "budget_eur": 70000,
+    "people": 4,
+    "lead": "Omar Haddad"
+  },
+  {
+    "id": 3,
+    "team": "Comet",
+    "budget_eur": 96000,
+    "people": 8,
+    "lead": "Lena Kovac"
+  },
+  {
+    "id": 4,
+    "team": "Delta",
+    "budget_eur": 52000,
+    "people": 5,
+    "lead": "Jonas Berg"
+  },
+  {
+    "id": 5,
+    "team": "Echo",
+    "budget_eur": 61000,
+    "people": 7,
+    "lead": "Aino Laine"
+  }
+]
