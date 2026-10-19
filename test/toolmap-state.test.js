@@ -49,3 +49,9 @@ test('every event adds a log line', () => {
   s = reduceState(s, { type: 'tool.call', id: 'c', tool: 'calculator', args: { expression: '1+1' } });
   assert.deepEqual(s.log, [{ kind: 'USER', text: 'q' }, { kind: 'TOOL', text: 'calculator({"expression":"1+1"})' }]);
 });
+
+test('a tool can provide its own phrase for the caption', () => {
+  const s = reduceState(initialState({ tools: [{ id: 'read_file', label: 'Your private files', phrase: 'opens your private files' }] }),
+    { type: 'tool.call', id: 'c', tool: 'read_file', args: {} });
+  assert.equal(s.caption, 'It opens your private files…');
+});

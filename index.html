@@ -1,5 +1,229 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>From Answering to Doing</title></head>
-<body><h1>From Answering to Doing</h1></body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>From Answering to Doing</title>
+  <meta name="description" content="Beyond the chatbot: how AI agents use tools, remember, and act. A talk with live demos by GPT-Lab, Tampere University at Crazytown Tampere, 23 October 2026.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <canvas id="stage3d" aria-hidden="true"></canvas>
+  <div class="mode-bar">
+    <button type="button" id="mode-badge" title="Switch between live and replay">…</button>
+    <button type="button" id="buzz-badge" title="Whose phone buzzes in the finale">📱</button>
+  </div>
+
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- 1 · Cold open -->
+      <section data-demo="coldopen" data-title="Cold open">
+        <div class="demo-host"></div>
+        <aside class="notes">
+          <p><b>Demo speaker:</b> No intro. Press → to type "Book a dinner for my team tonight." Press → again: the chatbot says it can't.</p>
+          <p><b>Theory speaker:</b> "This is what most of us know as AI. Polite, clever, and it can't actually do anything. By the end of this hour, the same kind of AI will do this while you watch, and talk while it does it."</p>
+        </aside>
+      </section>
+
+      <!-- 2 · Title -->
+      <section data-scene="hero" data-title="Title" class="title-slide">
+        <p class="kicker">Crazytown Tampere · 23 October 2026</p>
+        <h1>From Answering<br><span class="accent">to Doing</span></h1>
+        <p class="lead">Beyond the chatbot: how AI agents use tools, remember, and act</p>
+        <div class="byline">
+          <div><img src="/speaker/nasir.jpg" alt=""><span>Md. Nasir Uddin Shuvo</span></div>
+          <div><img src="/speaker/aidul.jpg" alt=""><span>Md. Aidul Islam</span></div>
+        </div>
+        <p class="credits">GPT-Lab, Tampere University · Sponsored by Crazytown Tampere</p>
+        <aside class="notes">
+          <p><b>Theory speaker:</b> Ten-second intro: "We're Nasir and Aidul, project researchers at GPT-Lab, Tampere University. Thanks to Crazytown for hosting." Full profiles are at the end.</p>
+        </aside>
+      </section>
+
+      <!-- 3 · Hands up -->
+      <section data-title="Hands up">
+        <h2 class="big-q">🙋 Who used ChatGPT<br>(or similar) this week?</h2>
+        <h2 class="big-q fragment">🙋 Who had it actually <span class="accent">do</span> something?<br><small>send · book · change · buy</small></h2>
+        <p class="fragment punch">That gap is this talk.</p>
+        <aside class="notes">
+          <p><b>Theory speaker:</b> First question: expect almost every hand. Press →. Second question: expect very few. Press → and say "That gap is this talk."</p>
+        </aside>
+      </section>
+
+      <!-- 4 · Brain in a jar (three.js; fragments drive the build) -->
+      <section data-scene="brain" data-title="Brain in a jar" class="brain-slide">
+        <div class="brain-caption">
+          <h2>A chatbot is a <span class="accent">brain in a jar</span></h2>
+          <p class="brain-sub">It knows a lot. It can talk. It can't touch anything.</p>
+          <p class="fragment brain-step" data-brain="1">🖐️ Give it <b>hands</b>: tools it can call</p>
+          <p class="fragment brain-step" data-brain="2">🗂️ Give it a <b>notebook</b>: memory that lasts</p>
+          <p class="fragment brain-step" data-brain="3">🔁 Give it a <b>loop</b>: think → act → observe → repeat</p>
+          <p class="fragment punch">That's an <span class="accent">agent</span>.</p>
+        </div>
+        <aside class="notes">
+          <p><b>Theory speaker:</b> The one picture people should take home. Each → adds a part to the 3D jar.</p>
+          <p>Hands: "a tool is just a function the AI is allowed to call: search, calculator, send email." Notebook: "memory it writes to and reads later, across conversations." Loop: "it doesn't answer once. It tries, looks at what happened, and decides what to do next."</p>
+        </aside>
+      </section>
+
+      <!-- 5 · The loop as code -->
+      <section data-title="The loop" class="code-slide">
+        <h2>The whole agent, in eight lines</h2>
+        <pre class="loop-code"><code><span class="fragment highlight-current-blue" data-fragment-index="1">while not done:</span>
+<span class="fragment highlight-current-blue" data-fragment-index="2">    thought = model.think(question, memory, results)</span>
+<span class="fragment highlight-current-blue" data-fragment-index="3">    if thought.wants_a_tool:</span>
+<span class="fragment highlight-current-blue" data-fragment-index="4">        result = run(thought.tool, thought.input)</span>
+<span class="fragment highlight-current-blue" data-fragment-index="5">        results.add(result)</span>
+<span class="fragment highlight-current-blue" data-fragment-index="6">        if worth_keeping(result): memory.save(result)</span>
+<span class="fragment highlight-current-blue" data-fragment-index="7">    else:</span>
+<span class="fragment highlight-current-blue" data-fragment-index="8">        say(thought.answer); done = True</span></code></pre>
+        <p class="fragment small-note" data-fragment-index="9">The model only ever <b>chooses</b>. Our code <b>runs</b> the tool and hands back the result. That's where control (and safety) lives.</p>
+        <aside class="notes">
+          <p><b>Theory speaker:</b> "Don't worry if you don't code. Read it like a recipe." Step through the lines. Land on: the AI picks, the program does. You'll see this exact loop light up in the next demo.</p>
+        </aside>
+      </section>
+
+      <!-- 6 · How we got here -->
+      <section data-title="How we got here">
+        <h2>How we got here</h2>
+        <div class="timeline">
+          <div class="tl fragment"><b>2022</b><span>💬 Chat</span><small>answers questions</small></div>
+          <div class="tl fragment"><b>2023</b><span>🛠️ Tools</span><small>can call functions</small></div>
+          <div class="tl fragment"><b>2024</b><span>🗂️ Memory</span><small>remembers you</small></div>
+          <div class="tl fragment"><b>2025</b><span>🏃 Acting</span><small>uses computers, writes code</small></div>
+          <div class="tl fragment"><b>2026</b><span>🤝 Agents ↔ agents</span><small>talk to each other</small></div>
+        </div>
+        <aside class="notes">
+          <p><b>Theory speaker:</b> Quick, one sentence each. Don't linger: the demos are the point. "Notice the last one: we'll see two agents negotiate later."</p>
+        </aside>
+      </section>
+
+      <!-- 7 · Demo 1 -->
+      <section data-demo="demo1" data-title="Demo 1 · Watch it work" class="demo-slide">
+        <h3 class="demo-title">Demo 1 · Watch it work</h3>
+        <div class="demo-host"></div>
+        <aside class="notes">
+          <p><b>Demo speaker:</b> Press → to step. Point at: the highlighted database row (where the answer came from), the calculator ("it doesn't guess maths"), the memory card sliding in, and the loop line lighting up. Then "the next day": one step from memory.</p>
+          <p><b>Theory speaker:</b> Ask the room for a question about the company (e.g. "How many engineers do we have?", "Can Comet afford DevDays?"). <b>Demo speaker</b> types it in "Audience question" → Ask live (LIVE mode only). If it stalls: "Switch to replay".</p>
+        </aside>
+      </section>
+
+      <!-- 8 · Memory concept -->
+      <section data-title="Memory can lie">
+        <h2>Memory is powerful… <span class="accent">and it can lie</span></h2>
+        <div class="two-col">
+          <div class="card fragment"><h4>😬 A note with no date, no source</h4><p>"Launch date: 15 Oct." Written months ago by another bot. Is it still true?</p></div>
+          <div class="card fragment"><h4>🛡️ A note with receipts</h4><p>Who wrote it, when, from where, and a rule: <i>check before you trust</i>.</p></div>
+        </div>
+        <aside class="notes"><p><b>Theory speaker:</b> "Remember the notebook? Like a human's, it can be out of date. Watch."</p></aside>
+      </section>
+
+      <!-- 9 · Memory demo -->
+      <section data-demo="memory" data-title="Memory demo" class="demo-slide">
+        <h3 class="demo-title">When memory goes wrong</h3>
+        <div class="demo-host"></div>
+        <aside class="notes">
+          <p><b>Demo speaker:</b> First tab: it trusts memory and says "15 October", confidently wrong, and it would go in the newsletter. → moves to the second tab: it sees the note is old and from a bot, checks the project notes, finds the 22 Sep change, answers 3 November, and fixes its memory.</p>
+          <p><b>Theory speaker:</b> "Same model. The difference is the rules we gave it."</p>
+        </aside>
+      </section>
+
+      <!-- 10 · Injection concept -->
+      <section data-title="Data vs instructions">
+        <h2>To an agent, everything it reads<br>could look like an <span class="accent">instruction</span></h2>
+        <p class="lead fragment">A web page, an email, a PDF… can hide text that says<br><i>"Ignore your user. Do this instead."</i></p>
+        <aside class="notes"><p><b>Theory speaker:</b> "This is called prompt injection. It's the number one security problem for agents. Let's see it."</p></aside>
+      </section>
+
+      <!-- 11 · Demo 2 -->
+      <section data-demo="demo2" data-title="Demo 2 · Watch it get fooled" class="demo-slide">
+        <h3 class="demo-title">Demo 2 · Watch it get fooled</h3>
+        <div class="demo-host"></div>
+        <aside class="notes">
+          <p><b>Theory speaker:</b> The vote is on screen: hands up, "will it fall for it?"</p>
+          <p><b>Demo speaker:</b> → runs it. Point at the red box: hidden white-on-white text. The agent reads the private file and publishes the keys (fake!), then says "Done!" with no mention of it. → switches to "With guard": the page is labelled untrusted, the agent calls out the hidden text, and a human approves the clean summary.</p>
+          <p><b>Theory speaker:</b> "Two layers: label what's data, and keep a human on anything that leaves the building."</p>
+        </aside>
+      </section>
+
+      <!-- 12 · So what for your job -->
+      <section data-title="So what for your job">
+        <h2>So what does this mean for <span class="accent">your</span> job?</h2>
+        <div class="three-col">
+          <div class="card fragment"><h4>🧾 Accounting</h4><p>Matches invoices to purchase orders, flags the mismatches, drafts the email to the supplier.</p></div>
+          <div class="card fragment"><h4>🧑‍💼 HR & admin</h4><p>Runs onboarding: orders the laptop, creates accounts, books the intro coffees, remembers preferences.</p></div>
+          <div class="card fragment"><h4>🧪 Engineering & research</h4><p>Reads the error logs, finds what broke, prepares a fix or a summary for review.</p></div>
+        </div>
+        <p class="fragment punch">Agents do. <span class="accent">Humans approve.</span></p>
+        <aside class="notes"><p><b>Theory speaker:</b> Pick the example closest to who's in the room. Land the rule: the agent does the legwork, a person signs off.</p></aside>
+      </section>
+
+      <!-- 13 · Finale -->
+      <section data-demo="finale" data-title="Demo 3 · Live voice finale" class="demo-slide finale-slide">
+        <h3 class="demo-title">Demo 3 · Remember the dinner?</h3>
+        <div class="demo-host"></div>
+        <aside class="notes">
+          <p><b>Theory speaker:</b> "At the start, the chatbot couldn't book dinner. Let's ask again, out loud."</p>
+          <p><b>Demo speaker:</b> Press → to connect (LIVE), then just talk: "Plan a dinner for my team tonight." Watch memory glow, pins drop, the weather, then the two agents call each other out loud. Your phone buzzes: hold it up! Mute button if the room gets loud. If the voice won't start: "Use replay".</p>
+          <p>Optional: "Remember that Aino doesn't eat fish." It appears in memory.</p>
+        </aside>
+      </section>
+
+      <!-- 14 · Q&A -->
+      <section data-demo="qa" data-title="Q&A" class="demo-slide">
+        <h3 class="demo-title">Questions? <span class="muted">You can ask the agent too.</span></h3>
+        <div class="demo-host"></div>
+        <aside class="notes"><p><b>Demo speaker:</b> Press → to start the Q&amp;A voice agent (LIVE only). Repeat audience questions into the mic. It answers about the talk only. First thing to cut if time is short.</p></aside>
+      </section>
+
+      <!-- 15 · Take-home -->
+      <section data-scene="hero" data-title="Take-home">
+        <h2 class="takeaway">AI isn't just a chat box anymore.<br>It can <span class="accent">look things up</span>, <span class="accent">use tools</span>, <span class="accent">remember</span>, and <span class="accent">do work</span> on its own.</h2>
+        <p class="lead fragment">It can also get things wrong in ways you need to watch for.</p>
+        <aside class="notes"><p><b>Theory speaker:</b> Say it slowly. This is the one sentence.</p></aside>
+      </section>
+
+      <!-- 16 · Speakers -->
+      <section data-title="Speakers" class="speakers-slide">
+        <h2>Thank you!</h2>
+        <div class="speakers">
+          <div class="speaker">
+            <img class="photo" src="/speaker/nasir.jpg" alt="Md. Nasir Uddin Shuvo">
+            <h3>Md. Nasir Uddin Shuvo</h3>
+            <p>Project Researcher · GPT-Lab, Tampere University</p>
+            <div class="qrs">
+              <figure><img src="/qr/nasir-linkedin.svg" alt="QR code: Nasir on LinkedIn"><figcaption>LinkedIn</figcaption></figure>
+              <figure><img src="/qr/nasir-portfolio.svg" alt="QR code: Nasir's portfolio"><figcaption>Portfolio</figcaption></figure>
+            </div>
+          </div>
+          <div class="speaker">
+            <img class="photo" src="/speaker/aidul.jpg" alt="Md. Aidul Islam">
+            <h3>Md. Aidul Islam</h3>
+            <p>Project Researcher · GPT-Lab, Tampere University</p>
+            <div class="qrs">
+              <figure><img src="/qr/aidul-linkedin.svg" alt="QR code: Aidul on LinkedIn"><figcaption>LinkedIn</figcaption></figure>
+              <figure><img src="/qr/aidul-portfolio.svg" alt="QR code: Aidul's portfolio"><figcaption>Portfolio</figcaption></figure>
+            </div>
+          </div>
+        </div>
+        <aside class="notes"><p><b>Both:</b> Leave this up while people scan.</p></aside>
+      </section>
+
+      <!-- 17 · Replay on your phone -->
+      <section data-scene="hero" data-title="Replay the demos" class="site-slide">
+        <h2>Replay every demo on your phone</h2>
+        <figure class="site-qr"><img src="/qr/site.svg" alt="QR code for the presentation website"><figcaption>nasiriubat.github.io/agent-presentation</figcaption></figure>
+        <p class="credits">Organised by GPT-Lab, Tampere University · Sponsored by Crazytown Tampere</p>
+        <aside class="notes"><p><b>Both:</b> "Everything you saw today is on this page: press play and watch the agent work, get fooled, and book the dinner."</p></aside>
+      </section>
+
+    </div>
+  </div>
+
+  <script type="module" src="/src/slides/deck.js"></script>
+</body>
 </html>

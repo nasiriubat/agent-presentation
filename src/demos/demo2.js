@@ -2,9 +2,9 @@
 import { toolmapDemo } from './toolmapDemo.js';
 
 const TOOLS = [
-  { id: 'read_webpage', label: 'Read web page', icon: '🌐' },
-  { id: 'read_file', label: 'Your private files', icon: '🔐' },
-  { id: 'public', label: 'Public wiki', icon: '📢', danger: true, aliases: ['publish'] },
+  { id: 'read_webpage', label: 'Read web page', icon: '🌐', phrase: 'reads the web page' },
+  { id: 'read_file', label: 'Your private files', icon: '🔐', phrase: 'opens your private files' },
+  { id: 'public', label: 'Public wiki', icon: '📢', danger: true, aliases: ['publish'], phrase: 'publishes to the public wiki' },
 ];
 
 export async function mount(container, { api } = {}) {

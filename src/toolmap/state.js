@@ -6,8 +6,9 @@ export const CODE_LINE = { think: 2, 'tool.call': 4, 'tool.result': 5, 'memory.s
 export const stripMarkdown = (t) => t.replace(/\*\*(.+?)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1').replace(/^#+\s*/gm, '');
 
 export function initialState({ tools = [], memory = [] } = {}) {
+  // what the caption says when a tool is used: a tool's own phrase, or "uses the <label>"
   const labels = {};
-  for (const t of tools) for (const id of [t.id, ...(t.aliases ?? [])]) labels[id] = t.label;
+  for (const t of tools) for (const id of [t.id, ...(t.aliases ?? [])]) labels[id] = t.phrase ?? `uses the ${t.label}`;
   return {
     labels,
     activeTool: null,
@@ -48,8 +49,8 @@ export function reduceState(state, e) {
     case 'think':
       return { ...s, bubble: e.text, memory: s.memory.map(calm) };
     case 'tool.call': {
-      const label = s.labels[e.tool] ?? e.tool;
-      return { ...s, activeTool: e.tool, bubble: '', caption: `It uses the ${label}…` };
+      const action = s.labels[e.tool] ?? `uses ${e.tool}`;
+      return { ...s, activeTool: e.tool, bubble: '', caption: `It ${action}…` };
     }
     case 'tool.result':
       return { ...s, highlightedRows: e.rows ?? s.highlightedRows, caption: `${s.caption.replace(/…$/, '')}… and reads the result.` };

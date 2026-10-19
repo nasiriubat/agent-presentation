@@ -2,10 +2,10 @@
 import { toolmapDemo, loadJson, loadText } from './toolmapDemo.js';
 
 export const DEMO1_TOOLS = [
-  { id: 'search_notes', label: 'Search notes', icon: '🔎' },
+  { id: 'search_notes', label: 'Search notes', icon: '🔎', phrase: 'searches the company notes' },
   { id: 'calculator', label: 'Calculator', icon: '🧮' },
-  { id: 'write_file', label: 'Write file', icon: '📄' },
-  { id: 'memory', label: 'Memory', icon: '🗂️', aliases: ['save_memory', 'recall_memory'] },
+  { id: 'write_file', label: 'Write file', icon: '📄', phrase: 'writes a file' },
+  { id: 'memory', label: 'Memory', icon: '🗂️', aliases: ['save_memory', 'recall_memory'], phrase: 'opens its memory' },
 ];
 
 export async function mount(container, { mode = 'replay', api } = {}) {
