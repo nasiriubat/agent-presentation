@@ -1,0 +1,5 @@
+Title:
+From Answering to Doing : Beyond the chatbot how AI agents use tools, remember, and act
+ 
+Description: AI that answers is familiar. AI that acts is a different kind of system. This session breaks down how agents use tools, hold memory, and decide their next move. with live demos of both what works and what fails.
+
