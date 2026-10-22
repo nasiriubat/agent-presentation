@@ -2,16 +2,19 @@
 // "brain in a jar" that gains hands (tools), a notebook (memory) and a loop.
 import * as THREE from 'three';
 
-const AMBER = 0xfbbf24, INDIGO = 0x818cf8, VIOLET = 0x4338ca;
+const AMBER = 0xf59e0b, INDIGO = 0x6366f1, SLATE = 0x94a3b8;
 
-function textSprite(text, { size = 64, color = '#e2e8f0', bg = null, pad = 18 } = {}) {
+function textSprite(text, { size = 64, color = '#0f172a', bg = null, border = '#cbd5e1', pad = 18 } = {}) {
   const c = document.createElement('canvas');
   const ctx = c.getContext('2d');
   ctx.font = `600 ${size}px Inter, system-ui, sans-serif`;
   const w = Math.ceil(ctx.measureText(text).width) + pad * 2;
   c.width = w; c.height = size + pad * 2;
   ctx.font = `600 ${size}px Inter, system-ui, sans-serif`;
-  if (bg) { ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(0, 0, c.width, c.height, 24); ctx.fill(); }
+  if (bg) {
+    ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(2, 2, c.width - 4, c.height - 4, 24); ctx.fill();
+    ctx.strokeStyle = border; ctx.lineWidth = 3; ctx.stroke();
+  }
   ctx.fillStyle = color; ctx.textBaseline = 'middle'; ctx.fillText(text, pad, c.height / 2);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -48,14 +51,14 @@ function buildHero() {
     pts.push(v);
   }
   const nodes = new THREE.Points(new THREE.BufferGeometry().setFromPoints(pts),
-    new THREE.PointsMaterial({ color: INDIGO, size: 0.09, map: roundDot(), alphaTest: 0.3, transparent: true, opacity: 0.9 }));
+    new THREE.PointsMaterial({ color: INDIGO, size: 0.09, map: roundDot(), alphaTest: 0.3, transparent: true, opacity: 0.85 }));
   g.add(nodes);
   const seg = [], edges = [];
   for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
     if (pts[i].distanceTo(pts[j]) < 0.95) { seg.push(pts[i], pts[j]); edges.push([pts[i], pts[j]]); }
   }
   g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(seg),
-    new THREE.LineBasicMaterial({ color: 0x475569, transparent: true, opacity: 0.35 })));
+    new THREE.LineBasicMaterial({ color: SLATE, transparent: true, opacity: 0.4 })));
   const pulses = Array.from({ length: 14 }, () => {
     const d = glowDot(AMBER, 0.035);
     g.add(d);
@@ -75,7 +78,7 @@ function buildHero() {
 function buildBrain() {
   const g = new THREE.Group();
   g.add(new THREE.AmbientLight(0xffffff, 0.6));
-  const key = new THREE.PointLight(0xa5b4fc, 30, 20); key.position.set(2, 3, 4); g.add(key);
+  const key = new THREE.PointLight(0xffffff, 30, 20); key.position.set(2, 3, 4); g.add(key);
 
   // the brain: a wrinkly blob made by displacing an icosphere
   const geo = new THREE.IcosahedronGeometry(0.8, 24);
@@ -88,23 +91,23 @@ function buildBrain() {
     p.setXYZ(i, v.x, v.y, v.z);
   }
   geo.computeVertexNormals();
-  const brain = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xf0abfc, emissive: 0x6d28d9, emissiveIntensity: 0.35, roughness: 0.55 }));
+  const brain = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xe879f9, emissive: 0x7c3aed, emissiveIntensity: 0.25, roughness: 0.6 }));
   brain.position.y = 0.05;
   g.add(brain);
 
   // the jar
   const jar = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.25, 2.3, 48, 1, true),
-    new THREE.MeshPhysicalMaterial({ color: 0x93c5fd, transparent: true, opacity: 0.16, roughness: 0.05, side: THREE.DoubleSide, depthWrite: false }));
+    new THREE.MeshPhysicalMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.14, roughness: 0.05, side: THREE.DoubleSide, depthWrite: false }));
   g.add(jar);
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(1.25, 0.03, 8, 64), new THREE.MeshBasicMaterial({ color: 0x93c5fd, transparent: true, opacity: 0.5 }));
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(1.25, 0.03, 8, 64), new THREE.MeshBasicMaterial({ color: 0x64748b, transparent: true, opacity: 0.8 }));
   rim.rotation.x = Math.PI / 2; rim.position.y = -1.15; g.add(rim);
-  const lid = new THREE.Mesh(new THREE.CylinderGeometry(1.32, 1.32, 0.14, 48), new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.6, roughness: 0.3 }));
+  const lid = new THREE.Mesh(new THREE.CylinderGeometry(1.32, 1.32, 0.14, 48), new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.15, roughness: 0.6 }));
   lid.position.y = 1.22; g.add(lid);
 
   // hands: tools around the jar
-  const toolDefs = [['🔎 Search', -2.45, 1.55], ['🧮 Calculate', 2.45, 1.55], ['📄 Write files', 2.45, -1.5], ['🌐 Web', -2.45, -1.5]];
+  const toolDefs = [['Search', -2.45, 1.55], ['Calculate', 2.45, 1.55], ['Write files', 2.45, -1.5], ['Browse the web', -2.45, -1.5]];
   const tools = toolDefs.map(([label, x, y]) => {
-    const s = textSprite(label, { bg: '#1e293bee', size: 56 });
+    const s = textSprite(label, { bg: '#ffffffee', size: 56 });
     s.position.set(x, y, 0); s.material.opacity = 0; g.add(s);
     const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(x, y, 0)]),
       new THREE.LineDashedMaterial({ color: AMBER, dashSize: 0.12, gapSize: 0.1, transparent: true, opacity: 0 }));
@@ -114,16 +117,16 @@ function buildBrain() {
   const handPulse = glowDot(); handPulse.visible = false; g.add(handPulse);
 
   // notebook: memory
-  const book = textSprite('🗂️ Memory', { bg: '#2a2410ee', size: 60, color: '#fde68a' });
+  const book = textSprite('Memory', { bg: '#fef3c7ee', border: '#f59e0b', size: 60, color: '#78350f' });
   book.position.set(0, -2.05, 0.6); book.material.opacity = 0; g.add(book);
-  const bookPulse = glowDot(0xfde68a); bookPulse.visible = false; g.add(bookPulse);
+  const bookPulse = glowDot(0xd97706); bookPulse.visible = false; g.add(bookPulse);
 
   // the loop
   const ring = new THREE.Mesh(new THREE.TorusGeometry(2.05, 0.022, 8, 160), new THREE.MeshBasicMaterial({ color: INDIGO, transparent: true, opacity: 0 }));
   ring.rotation.x = Math.PI / 2.35; g.add(ring);
   const comet = glowDot(AMBER, 0.08); comet.visible = false; g.add(comet);
-  const loopLabels = ['💭 think', '🛠️ act', '👀 observe', '🗂️ remember'].map((t, i) => {
-    const s = textSprite(t, { size: 48, color: '#c7d2fe' });
+  const loopLabels = ['think', 'act', 'observe', 'remember'].map((t, i) => {
+    const s = textSprite(t, { size: 48, color: '#3730a3', bg: '#eef2ffee', border: '#c7d2fe' });
     // label points on the tilted ring: back, right, front, left
     const a = Math.PI / 2 - (i * Math.PI) / 2;
     s.position.set(Math.cos(a) * 2.3, 0, -Math.sin(a) * 2.3).applyAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2.35 - Math.PI / 2);
@@ -135,7 +138,7 @@ function buildBrain() {
   g.position.set(2.0, -0.15, 0);
   g.scale.setScalar(0.92);
   let stage = 0, time = 0;
-  const fadeTo = (mat, target, dt) => { mat.opacity += (target - mat.opacity) * Math.min(1, dt * 4); };
+  const fadeTo = (mat, target, dt) => { mat.opacity += (target - mat.opacity) * Math.min(1, dt * 4); if (Math.abs(target - mat.opacity) < 0.02) mat.opacity = target; };
 
   g.userData.setStage = (n) => { stage = n; };
   g.userData.tick = (dt) => {

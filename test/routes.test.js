@@ -11,18 +11,18 @@ async function serve(deps) {
   return { url: `http://localhost:${server.address().port}`, close: () => server.close() };
 }
 
-test('selftest reports a working key and missing Telegram config', async () => {
+test('selftest reports a working key', async () => {
   const s = await serve({ env: {}, openai: { responses: async () => ({ output_text: 'ok' }) } });
   try {
     const body = await (await fetch(`${s.url}/api/selftest`)).json();
-    assert.deepEqual(body, { openai: true, telegramConfigured: false });
+    assert.deepEqual(body, { openai: true });
   } finally { s.close(); }
 });
 
 test('selftest reports a broken key without crashing', async () => {
-  const s = await serve({ env: { TELEGRAM_BOT_TOKEN: 't', TELEGRAM_CHAT_ID_AIDUL: '1' }, openai: { responses: async () => { throw new Error('401'); } } });
+  const s = await serve({ env: {}, openai: { responses: async () => { throw new Error('401'); } } });
   try {
     const body = await (await fetch(`${s.url}/api/selftest`)).json();
-    assert.deepEqual(body, { openai: false, error: '401', telegramConfigured: true });
+    assert.deepEqual(body, { openai: false, error: '401' });
   } finally { s.close(); }
 });

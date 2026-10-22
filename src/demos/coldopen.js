@@ -1,6 +1,7 @@
 // Cold open: a plain chatbot is asked to do something in the world, and can't.
 import { loadJson } from './toolmapDemo.js';
 import { api as defaultApi } from '../core/api.js';
+import { icon } from '../ui/icons.js';
 import './demos.css';
 
 const PROMPT = 'Book a dinner for my team tonight.';
@@ -9,7 +10,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export async function mount(container, { mode = 'replay', api = defaultApi } = {}) {
   const root = document.createElement('div');
   root.className = 'chat-demo';
-  root.innerHTML = `<div class="chat-window"><div class="chat-head"><i></i><i></i><i></i> A chatbot</div><div class="chat-msgs"></div><div class="chat-input"></div></div>`;
+  root.innerHTML = `<div class="chat-window"><div class="chat-head"><i></i><i></i><i></i><span>${icon('message')} A chatbot</span></div><div class="chat-msgs"></div><div class="chat-input"></div></div>`;
   container.append(root);
   const msgs = root.querySelector('.chat-msgs');
   const input = root.querySelector('.chat-input');

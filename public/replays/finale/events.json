@@ -353,7 +353,7 @@
   "m": "invite",
   "a": [
    {
-    "delivered": true
+    "text": "Team dinner tonight: Ravintola Näsi, 20:30, indoors. Vegetarian menu sorted. See you there!"
    }
   ]
  },
@@ -370,7 +370,7 @@
   "m": "transcript",
   "a": [
    "assistant",
-   "Done. Check your phone, the invite is there."
+   "Done. The invite is on its way to the team."
   ]
  },
  {

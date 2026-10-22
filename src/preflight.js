@@ -5,7 +5,7 @@ import { forcedReplay, setForcedReplay } from './core/modes.js';
 
 const BASE = import.meta.env.BASE_URL;
 const box = document.getElementById('checks');
-const REPLAYS = ['coldopen', 'demo1-task1', 'memory-unguarded', 'memory-guarded', 'demo2-unguarded', 'demo2-guarded'];
+const REPLAYS = ['coldopen', 'demo1-task1', 'memory-unguarded', 'memory-guarded', 'demo2-invoices'];
 
 function row(name, extra = '') {
   const el = document.createElement('div');
@@ -56,18 +56,6 @@ async function run() {
     if (!finale.some((c) => c.m === 'booking')) throw new Error('finale replay has no booking');
     return `${REPLAYS.length} demo replays + finale`;
   });
-
-  const tg = row('Telegram: the phone buzzes', `<select id="who"><option value="aidul">Aidul</option><option value="nasir">Nasir</option></select><button type="button" id="tg">Send test</button>`);
-  tg.info('Press "Send test" and check the phone.');
-  tg.el.querySelector('#who').value = localStorage.getItem('buzz') ?? 'aidul';
-  tg.el.querySelector('#tg').onclick = async () => {
-    const who = tg.el.querySelector('#who').value;
-    localStorage.setItem('buzz', who);
-    try {
-      const r = await api.json('/api/telegram', { who, text: '🛫 Preflight test from the agent demo' });
-      r.delivered ? tg.ok(`Delivered to ${who}'s phone`) : tg.bad(r.error ?? 'not delivered');
-    } catch (err) { tg.bad(err.message); }
-  };
 
   const mic = row('Microphone', `<div class="meter"><i></i></div><button type="button" id="mic">Test 5 s</button>`);
   mic.info('Speak into the mic you will use on stage.');

@@ -1,0 +1,148 @@
+[
+ {
+  "type": "user",
+  "step": true,
+  "text": "Three supplier invoices came in this week. Match them to our purchase orders, flag anything that doesn't add up, and draft the replies.",
+  "t": 0
+ },
+ {
+  "type": "think",
+  "step": true,
+  "text": "I'll read the inbox first.",
+  "t": 2400
+ },
+ {
+  "type": "tool.call",
+  "id": "i1",
+  "tool": "read_inbox",
+  "args": {
+   "folder": "Invoices",
+   "unread": true
+  },
+  "t": 4800
+ },
+ {
+  "type": "tool.result",
+  "id": "i1",
+  "tool": "read_inbox",
+  "result": "3 unread invoices:\n1. Nordic Office Supply, INV-8817, EUR 4,452, ref PO-2041\n2. Lumo Print, INV-553, EUR 1,850, ref PO-2044\n3. Tampere Catering, INV-2290, EUR 960, ref PO-2047",
+  "t": 6000
+ },
+ {
+  "type": "think",
+  "step": true,
+  "text": "Now the purchase orders for those three.",
+  "t": 7200
+ },
+ {
+  "type": "tool.call",
+  "id": "i2",
+  "tool": "search_orders",
+  "args": {
+   "po": [
+    "PO-2041",
+    "PO-2044",
+    "PO-2047"
+   ]
+  },
+  "t": 9600
+ },
+ {
+  "type": "tool.result",
+  "id": "i2",
+  "tool": "search_orders",
+  "result": "PO-2041 Nordic Office Supply EUR 4,200 (open)\nPO-2044 Lumo Print EUR 1,850 (open)\nPO-2047 Tampere Catering EUR 960 (open)",
+  "rows": [
+   1,
+   2,
+   3
+  ],
+  "t": 10800
+ },
+ {
+  "type": "think",
+  "step": true,
+  "text": "Two match exactly. Nordic's invoice is higher than its order. Calculator, not guesswork.",
+  "t": 12000
+ },
+ {
+  "type": "tool.call",
+  "id": "i3",
+  "tool": "calculator",
+  "args": {
+   "expression": "4452 - 4200"
+  },
+  "t": 14400
+ },
+ {
+  "type": "tool.result",
+  "id": "i3",
+  "tool": "calculator",
+  "result": "252",
+  "t": 15600
+ },
+ {
+  "type": "think",
+  "step": true,
+  "text": "EUR 252 over, about 6%. I won't approve that quietly. I'll draft a question to the supplier.",
+  "t": 16800
+ },
+ {
+  "type": "tool.call",
+  "id": "i4",
+  "tool": "draft_email",
+  "args": {
+   "to": "billing@nordicoffice.example",
+   "subject": "INV-8817 vs PO-2041"
+  },
+  "t": 19200
+ },
+ {
+  "type": "tool.result",
+  "id": "i4",
+  "tool": "draft_email",
+  "result": "Draft saved: drafts/nordic-INV-8817.txt",
+  "t": 20400
+ },
+ {
+  "type": "file.write",
+  "path": "drafts/nordic-INV-8817.txt",
+  "public": false,
+  "content": "To: billing@nordicoffice.example\nSubject: INV-8817 vs PO-2041\n\nHi Nordic Office Supply,\n\nInvoice INV-8817 is EUR 4,452, but our purchase order PO-2041 is EUR 4,200. Could you explain the EUR 252 difference or send a corrected invoice?\n\nThanks,\nBrightloop Finance",
+  "t": 21600
+ },
+ {
+  "type": "approval",
+  "step": true,
+  "text": "Send to billing@nordicoffice.example?\n\nInvoice INV-8817 is EUR 4,452, but our purchase order PO-2041 is EUR 4,200. Could you explain the EUR 252 difference or send a corrected invoice?",
+  "answer": "y",
+  "t": 22800
+ },
+ {
+  "type": "tool.call",
+  "id": "i5",
+  "tool": "send_email",
+  "args": {
+   "draft": "drafts/nordic-INV-8817.txt"
+  },
+  "t": 25200
+ },
+ {
+  "type": "tool.result",
+  "id": "i5",
+  "tool": "send_email",
+  "result": "Sent to billing@nordicoffice.example (approved by a human)",
+  "t": 26400
+ },
+ {
+  "type": "memory.save",
+  "fact": "Nordic Office Supply: INV-8817 queried on 23 Oct 2026, EUR 252 over PO-2041. Awaiting their reply.",
+  "t": 27600
+ },
+ {
+  "type": "answer",
+  "step": true,
+  "text": "Two invoices match their orders and are ready to pay. Nordic Office Supply billed EUR 252 more than ordered, so I've asked them to explain. Nothing has been paid.",
+  "t": 28800
+ }
+]

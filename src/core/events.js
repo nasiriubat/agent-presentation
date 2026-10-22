@@ -12,6 +12,7 @@ const REQUIRED = {
   warn: ['text'],
   guard: ['text'],
   approval: ['text', 'answer'],
+  harm: ['text'],
   section: ['title'],
 };
 

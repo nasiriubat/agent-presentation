@@ -7,6 +7,7 @@ import { ReplayRecorder } from './recorder.js';
 import { api as defaultApi } from '../core/api.js';
 import { createNegotiator } from './negotiate.js';
 import { exitGate } from './exitGate.js';
+import { icon } from '../ui/icons.js';
 
 const BASE = import.meta.env?.BASE_URL ?? '/';
 const asset = (p) => `${BASE}${p}`;
@@ -14,20 +15,30 @@ const asset = (p) => `${BASE}${p}`;
 export const FINALE_INSTRUCTIONS = `You are the Demo speaker's personal AI agent, live on stage at a talk in Tampere. Always speak English.
 Speak briefly: 1–2 short sentences per turn, warm and confident.
 When asked to plan tonight's team dinner: first recall_memory, then search_restaurants using what you remember (vegetarian, budget, party size),
-then get_weather, then call_restaurant for the best match, then send_invite to the Demo speaker with the agreed place and time.
+then get_weather, then call_restaurant for the best match, then send_invite to the team with the agreed place and time.
 Before each tool, say in one short sentence what you're about to do. After the booking, confirm it in one sentence.
 If someone asks you to remember something, use save_memory.`;
 
-export const QA_INSTRUCTIONS = `You are the AI agent from the talk "From Answering to Doing" by Nasir and Aidul of GPT-Lab, Tampere University, at Crazytown Tampere.
-Always speak English. Answer audience questions about AI agents, tools, memory, risks and the demos in 2–3 spoken sentences.
-Politely decline anything off-topic or personal.`;
-
 const loadJson = (p) => fetch(asset(p)).then((r) => { if (!r.ok) throw new Error(p); return r.json(); });
 
-export function mountFinale(container, { mode = 'replay', who = 'aidul', api = defaultApi } = {}) {
-  const board = new MissionBoard(container);
+export function mountFinale(container, { mode = 'replay', api = defaultApi } = {}) {
+  // a control bar above the board: play/pause and restart for the replay, "use replay" while live
+  const bar = document.createElement('div');
+  bar.className = 'finale-bar';
+  bar.innerHTML = `<span class="finale-mode">${mode === 'live' ? `${icon('mic')} Live voice` : `${icon('play')} Recorded run`}</span>
+    <div class="finale-tools">
+      ${mode === 'live' ? `<button type="button" data-act="replay" title="Stop the live voice and play the recording">${icon('play')} Use replay</button>` : ''}
+      <button type="button" data-act="play" title="Play" aria-label="Play">${icon('play')}</button>
+      <button type="button" data-act="reset" title="Restart" aria-label="Restart">${icon('rotate')}</button>
+    </div>`;
+  const host = document.createElement('div');
+  host.className = 'finale-host';
+  container.append(bar, host);
+  const board = new MissionBoard(host);
   const leave = exitGate(1500);
   let session, recorder, ctx, mixDest, replay, finished = false, started = false;
+  const playBtn = bar.querySelector('[data-act="play"]');
+  const setPlaying = (on) => { playBtn.innerHTML = on ? icon('pause') : icon('play'); playBtn.title = playBtn.ariaLabel = on ? 'Pause' : 'Play'; };
 
   const audioCtx = () => {
     if (!ctx) { ctx = new AudioContext(); mixDest = ctx.createMediaStreamDestination(); }
@@ -71,7 +82,7 @@ export function mountFinale(container, { mode = 'replay', who = 'aidul', api = d
     board.memory(memory.map((m) => m.fact), null);
     const handlers = createHandlers({ api, board, data: { restaurants, memory: [...memory] }, negotiate });
     const send_invite = handlers.send_invite;
-    handlers.send_invite = async (args) => { const out = await send_invite({ ...args, who }); finished = true; return out; };
+    handlers.send_invite = async (args) => { const out = await send_invite(args); finished = true; return out; };
     session = new RealtimeSession({
       api, instructions,
       tools: withTools ? FINALE_TOOLS : [],
@@ -112,29 +123,46 @@ export function mountFinale(container, { mode = 'replay', who = 'aidul', api = d
       return;
     }
     const audio = new Audio(asset('replays/finale/audio.webm'));
-    const hasAudio = await new Promise((r) => { audio.oncanplay = () => r(true); audio.onerror = () => r(false); audio.load(); });
-    let i = 0, startedAt = performance.now(), stopped = false;
-    replay = { stop: () => { stopped = true; audio.pause(); } };
+    // a missing or unsupported recording must never hang the replay (phones may fire neither event)
+    const hasAudio = await new Promise((r) => {
+      const giveUp = setTimeout(() => r(false), 3000);
+      audio.oncanplay = () => { clearTimeout(giveUp); r(true); };
+      audio.onerror = () => { clearTimeout(giveUp); r(false); };
+      audio.load();
+    });
+    let i = 0, startedAt = performance.now(), stopped = false, pausedAt = null, pausedFor = 0;
+    replay = {
+      stop: () => { stopped = true; audio.pause(); clip?.pause(); },
+      pause: () => { if (pausedAt !== null) return; pausedAt = performance.now(); audio.pause(); clip?.pause(); setPlaying(false); },
+      resume: () => { if (pausedAt === null) return; pausedFor += performance.now() - pausedAt; pausedAt = null; if (hasAudio) audio.play().catch(() => {}); clip?.play().catch(() => {}); setPlaying(true); },
+      get paused() { return pausedAt !== null; },
+    };
+    setPlaying(true);
     if (hasAudio) audio.play().catch(() => {});
-    const clock = () => (hasAudio && !audio.paused ? audio.currentTime * 1000 : performance.now() - startedAt);
+    const clock = () => (hasAudio ? audio.currentTime * 1000 : performance.now() - startedAt - pausedFor);
     await new Promise((resolve) => {
-      const tick = async () => {
+      const tick = () => {
         if (stopped) return resolve();
-        while (i < events.length && events[i].t <= clock()) {
-          const ev = events[i++];
-          if (ev.m === 'clip') { if (!hasAudio) playClipUrl(ev.a[0]); }
-          else board[ev.m]?.(...ev.a);
+        if (pausedAt === null) {
+          while (i < events.length && events[i].t <= clock()) {
+            const ev = events[i++];
+            if (ev.m === 'clip') { if (!hasAudio) playClipUrl(ev.a[0]); }
+            else board[ev.m]?.(...ev.a);
+          }
+          if (i >= events.length) return resolve();
         }
-        if (i >= events.length) return resolve();
         requestAnimationFrame(tick);
       };
       tick();
     });
+    setPlaying(false);
     finished = true;
   }
 
+  let clip = null; // the negotiation turn currently playing when the run has no full recording
   function playClipUrl(url) {
-    new Audio(asset(url)).play().catch(() => {});
+    clip = new Audio(asset(url));
+    clip.play().catch(() => {});
   }
 
   // Wraps the board so every UI call is logged with its time, for the replay file.
@@ -148,28 +176,41 @@ export function mountFinale(container, { mode = 'replay', who = 'aidul', api = d
     recorder.start();
   }
 
+  bar.querySelector('[data-act="replay"]')?.addEventListener('click', (ev) => { ev.currentTarget.blur(); started = true; leave(); useReplay(); });
+  playBtn.onclick = () => {
+    playBtn.blur();
+    if (!started) { started = true; leave(); audioCtx().resume().catch(() => {}); mode === 'live' ? startLive() : startReplay(); return; }
+    if (replay?.paused) replay.resume(); else replay?.pause();
+  };
+  bar.querySelector('[data-act="reset"]').onclick = (ev) => { ev.currentTarget.blur(); api_reset(); };
+  function api_reset() {
+    replay?.stop();
+    replay = null;
+    session?.close();
+    session = null;
+    started = false; finished = false;
+    board.reset();
+    board.micState('idle');
+    setPlaying(false);
+  }
+
   return {
     board,
     get finished() { return finished; },
     async arm() {},
+    // Leaving the slide: pause a replay, hang up a live session. State stays so a stray ← costs nothing.
+    pause() { if (replay) replay.pause(); if (session) { session.close(); session = null; finished = true; } },
     // First press starts the demo; it stays on the slide until the run has finished,
     // or the presenter presses → twice quickly (escape hatch if the agent never finishes).
     async step() {
       audioCtx().resume().catch(() => {}); // created inside the presenter's key press or click
       if (!started) { started = true; leave(); mode === 'live' ? await startLive() : startReplay(); return true; }
+      if (replay?.paused) { replay.resume(); return true; } // → after a pause carries on
       return !(finished || leave());
     },
     async autoplay() { started = true; await startReplay(); },
-    startQa: () => startLive(QA_INSTRUCTIONS, false),
     startRecording,
     stopRecording: () => recorder?.stop(),
-    reset() {
-      replay?.stop();
-      session?.close();
-      session = null;
-      started = false; finished = false;
-      board.reset();
-      board.micState('idle');
-    },
+    reset: api_reset,
   };
 }

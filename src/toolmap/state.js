@@ -18,12 +18,13 @@ export function initialState({ tools = [], memory = [] } = {}) {
     caption: '',
     bubble: '',
     log: [],
+    story: [], // the plain-English account shown beside the stage: [{role, text, tool?, done?}]
   };
 }
 
 const LOG_KIND = {
   user: 'USER', think: 'THINK', 'tool.call': 'TOOL', 'tool.result': '→', 'memory.save': 'MEMORY+', 'memory.recall': 'MEMORY?',
-  'file.write': 'FILE', answer: 'ANSWER', warn: 'WARNING', guard: 'GUARD', approval: 'HUMAN', section: '——',
+  'file.write': 'FILE', answer: 'ANSWER', warn: 'WARNING', guard: 'GUARD', approval: 'HUMAN', harm: 'HARM', section: '——',
 };
 
 function logText(e) {
@@ -38,14 +39,39 @@ function logText(e) {
   }
 }
 
+// The story entry an event adds (or null). A tool result completes the previous tool entry instead.
+function storyEntry(e, labels) {
+  switch (e.type) {
+    case 'user': return { role: 'user', text: e.text };
+    case 'think': return { role: 'think', text: stripMarkdown(e.text) };
+    case 'tool.call': return { role: 'tool', tool: e.tool, text: `It ${labels[e.tool] ?? `uses ${e.tool}`}…`, done: false };
+    case 'memory.save': return { role: 'memory', text: `It saves a fact to memory: "${e.fact}"` };
+    case 'memory.recall': return { role: 'memory', text: `It remembers: "${e.fact}"` };
+    case 'file.write': return { role: 'file', text: e.public ? `It publishes ${e.path} for everyone to see.` : `It writes ${e.path}: real work, not just a reply.`, danger: Boolean(e.public) };
+    case 'warn': return { role: 'warn', text: e.text };
+    case 'harm': return { role: 'warn', text: e.text, danger: true };
+    case 'guard': return { role: 'guard', text: e.text };
+    case 'approval': return { role: 'human', text: `A human checks it first: ${e.answer === 'y' ? 'approved' : 'blocked'}.` };
+    case 'answer': return { role: 'answer', text: stripMarkdown(e.text) };
+    case 'section': return { role: 'section', text: e.title };
+    default: return null;
+  }
+}
+
 export function reduceState(state, e) {
   const s = { ...state, log: [...state.log, { kind: LOG_KIND[e.type], text: logText(e) }] };
   if (CODE_LINE[e.type]) s.codeLine = CODE_LINE[e.type];
   const calm = (m) => ({ ...m, glow: false, isNew: false });
+  const entry = storyEntry(e, s.labels);
+  if (entry) s.story = [...s.story, entry];
+  else if (e.type === 'tool.result') {
+    const i = s.story.findLastIndex((x) => x.role === 'tool' && x.tool === e.tool);
+    if (i >= 0) s.story = s.story.map((x, j) => (j === i ? { ...x, done: true } : x));
+  }
 
   switch (e.type) {
     case 'user':
-      return { ...s, caption: `📋 "${e.text}"`, bubble: '', activeTool: null, highlightedRows: [], memory: s.memory.map(calm) };
+      return { ...s, caption: `"${e.text}"`, bubble: '', activeTool: null, highlightedRows: [], memory: s.memory.map(calm) };
     case 'think':
       return { ...s, bubble: e.text, memory: s.memory.map(calm) };
     case 'tool.call': {
@@ -59,14 +85,15 @@ export function reduceState(state, e) {
     case 'memory.recall':
       return { ...s, memory: s.memory.map((m) => (m.fact === e.fact ? { ...m, glow: true } : m)), caption: 'It checks its memory first.' };
     case 'file.write':
-      return { ...s, caption: e.public ? `⚠️ It publishes ${e.path} for everyone to see.` : `It writes ${e.path}: real work, not just a reply.` };
+      return { ...s, caption: e.public ? `It publishes ${e.path} for everyone to see.` : `It writes ${e.path}: real work, not just a reply.` };
     case 'warn':
     case 'guard':
+    case 'harm':
       return { ...s, caption: e.text };
     case 'approval':
-      return { ...s, caption: `🙋 A human checks it first: ${e.answer === 'y' ? 'approved' : 'blocked'}.` };
+      return { ...s, caption: `A human checks it first: ${e.answer === 'y' ? 'approved' : 'blocked'}.` };
     case 'answer':
-      return { ...s, activeTool: null, bubble: '', caption: `✅ ${stripMarkdown(e.text)}` };
+      return { ...s, activeTool: null, bubble: '', caption: stripMarkdown(e.text) };
     case 'section':
       return { ...s, activeTool: null, bubble: '', highlightedRows: [], caption: e.title };
     default:

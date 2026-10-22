@@ -40,9 +40,12 @@ test('get_weather falls back to a cached forecast when the server is down', asyn
   assert.equal(out.cached, true);
 });
 
-test('send_invite reports a failed delivery without throwing', async () => {
-  const h = createHandlers({ api: { json: async () => { throw new Error('down'); } }, board, data: { restaurants, memory }, negotiate: async () => ({}) });
-  assert.deepEqual(JSON.parse(await h.send_invite({ who: 'nasir', text: 'Dinner 20:30' })), { delivered: false });
+test('send_invite shows the message on the board and needs no network', async () => {
+  let shown;
+  const spyBoard = new Proxy({}, { get: (_, m) => (m === 'invite' ? (x) => { shown = x; } : () => {}) });
+  const h = createHandlers({ api: { json: async () => { throw new Error('down'); } }, board: spyBoard, data: { restaurants, memory }, negotiate: async () => ({}) });
+  assert.deepEqual(JSON.parse(await h.send_invite({ text: 'Dinner 20:30' })), { sent: true });
+  assert.deepEqual(shown, { text: 'Dinner 20:30' });
 });
 
 test('recall_memory returns the stored facts and save_memory adds one', async () => {

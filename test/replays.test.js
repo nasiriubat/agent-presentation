@@ -4,7 +4,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { validateEvent } from '../src/core/events.js';
 
 const DIR = 'public/replays/';
-const EVENT_REPLAYS = ['coldopen.json', 'demo1-task1.json', 'memory-unguarded.json', 'memory-guarded.json', 'demo2-unguarded.json', 'demo2-guarded.json'];
+const EVENT_REPLAYS = ['coldopen.json', 'demo1-task1.json', 'memory-unguarded.json', 'memory-guarded.json', 'demo2-invoices.json'];
 const load = (f) => JSON.parse(readFileSync(DIR + f, 'utf8'));
 
 test('every demo replay exists', () => {
@@ -25,16 +25,13 @@ test('every other replay JSON in the folder is accounted for', () => {
   assert.deepEqual(extra, ['negotiation-fallback.json']);
 });
 
-test('the unguarded injection replay leaks the fake key to a public file', () => {
-  const leak = load('demo2-unguarded.json').find((e) => e.type === 'file.write' && e.public);
-  assert.ok(leak);
-  assert.match(leak.content, /sk_demo_FAKE/);
-});
-
-test('the guarded injection replay never publishes the key and asks a human', () => {
-  const events = load('demo2-guarded.json');
-  assert.ok(events.some((e) => e.type === 'approval'));
-  for (const e of events.filter((x) => x.type === 'file.write')) assert.doesNotMatch(e.content, /sk_demo_FAKE/);
+test('the invoice replay queries the mismatch, has a human approve the email, and pays nothing', () => {
+  const events = load('demo2-invoices.json');
+  assert.ok(events.some((e) => e.type === 'tool.call' && e.tool === 'calculator'));
+  const ok = events.find((e) => e.type === 'approval');
+  assert.equal(ok.answer, 'y');
+  assert.ok(!events.some((e) => e.type === 'tool.call' && e.tool === 'pay_supplier'));
+  assert.match(events.at(-1).text, /Nothing has been paid/);
 });
 
 test('the guarded memory replay corrects the stale launch date', () => {

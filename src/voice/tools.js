@@ -22,8 +22,7 @@ export const FINALE_TOOLS = [
     preferredTime: { type: 'string', description: 'HH:MM, 24h' },
     vegetarianCount: { type: 'number' },
   }),
-  fn('send_invite', "Send the dinner invite to the Demo speaker's phone via Telegram.", {
-    who: { type: 'string', enum: ['nasir', 'aidul'] },
+  fn('send_invite', 'Send the dinner invite to the whole team as a message.', {
     text: { type: 'string', description: 'Short invite: place, time, seating.' },
   }),
 ];
@@ -74,13 +73,10 @@ export function createHandlers({ api, board, data, negotiate }) {
       if (result.booking) board.booking(result.booking);
       return json({ booking: result.booking });
     },
-    async send_invite({ who, text }) {
-      let delivered = false;
-      try {
-        delivered = Boolean((await api.json('/api/telegram', { who, text })).delivered);
-      } catch {}
-      board.invite({ delivered, who, text });
-      return json({ delivered });
+    // The invite is shown on the mission board as the message the team receives; nothing leaves the laptop.
+    async send_invite({ text }) {
+      board.invite({ text: String(text ?? '') });
+      return json({ sent: true });
     },
   };
 }

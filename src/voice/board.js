@@ -1,14 +1,15 @@
 // The finale's mission board: conversation on the left, the agent's work on the right.
+import { icon } from '../ui/icons.js';
 import './board.css';
 
 const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 const TOOLS = [
-  ['recall_memory', '🗂️', 'Memory', ['save_memory']],
-  ['search_restaurants', '🍽️', 'Restaurants'],
-  ['get_weather', '🌦️', 'Weather'],
-  ['call_restaurant', '📞', 'Call restaurant'],
-  ['send_invite', '✉️', 'Message'],
+  ['recall_memory', 'notebook', 'Memory', ['save_memory']],
+  ['search_restaurants', 'utensils', 'Restaurants'],
+  ['get_weather', 'weather', 'Weather'],
+  ['call_restaurant', 'phone', 'Call restaurant'],
+  ['send_invite', 'send', 'Message'],
 ];
 
 // A stylised Tampere: Näsijärvi to the north, Pyhäjärvi to the south, the Tammerkoski rapids between.
@@ -30,15 +31,15 @@ export class MissionBoard {
         <div class="mb-mic"><div class="mb-wave"><i></i><i></i><i></i><i></i><i></i></div><span class="mb-mic-label">Not connected</span><button class="mb-mute" type="button">Mute</button></div>
       </div>
       <div class="mb-work">
-        <div class="mb-strip">${TOOLS.map(([id, ic, label]) => `<div class="mb-chip" data-tool="${id}">${ic} ${label}</div>`).join('')}</div>
+        <div class="mb-strip">${TOOLS.map(([id, ic, label]) => `<div class="mb-chip" data-tool="${id}">${icon(ic)}<span>${label}</span></div>`).join('')}</div>
         <div class="mb-grid">
           <div class="mb-mapbox">${MAP_SVG}<div class="mb-pins"></div>
-            <div class="mb-call"><div class="mb-call-head"><div class="mb-party" data-speaker="yours">🧑‍💼 Your agent</div><div class="mb-party" data-speaker="restaurant">🍽️ Restaurant agent</div></div><div class="mb-call-lines"></div></div>
+            <div class="mb-call"><div class="mb-call-head"><div class="mb-party" data-speaker="yours">${icon('user')} Your agent</div><div class="mb-party" data-speaker="restaurant">${icon('utensils')} Restaurant agent</div></div><div class="mb-call-lines"></div></div>
           </div>
           <div class="mb-cards">
-            <div class="mb-card mb-memory"><h4>🗂️ Memory</h4><ul></ul></div>
-            <div class="mb-card mb-weather mb-dim"><h4>🌦️ Tonight</h4><div class="mb-weather-body">not checked yet</div></div>
-            <div class="mb-card mb-booking mb-dim"><h4>✅ Booking</h4><div class="mb-booking-body">nothing booked yet</div></div>
+            <div class="mb-card mb-memory"><h4>${icon('notebook')}<span>Memory</span></h4><ul></ul></div>
+            <div class="mb-card mb-weather mb-dim"><h4>${icon('weather')}<span>Tonight</span></h4><div class="mb-weather-body">not checked yet</div></div>
+            <div class="mb-card mb-booking mb-dim"><h4>${icon('calendar')}<span>Booking</span></h4><div class="mb-booking-body">nothing booked yet</div></div>
           </div>
         </div>
       </div>
@@ -119,12 +120,13 @@ export class MissionBoard {
   booking(b) {
     this.$('.mb-booking').classList.remove('mb-dim');
     this.$('.mb-booking').classList.add('mb-pop');
-    this.$('.mb-booking-body').innerHTML = `<b>${esc(b.restaurant)}</b><br>Tonight ${esc(b.time)} · ${esc(b.seating)}<br>${b.partySize} people · vegetarian menu ✓<div class="mb-invite"></div>`;
+    this.$('.mb-booking-body').innerHTML = `<b>${esc(b.restaurant)}</b><br>Tonight ${esc(b.time)} · ${esc(b.seating)}<br>${b.partySize} people · vegetarian menu ${icon('check')}<div class="mb-invite"></div>`;
   }
 
-  invite({ delivered }) {
+  // The message the team receives, shown under the booking like a sent chat bubble.
+  invite({ text = '' } = {}) {
     const el = this.$('.mb-invite');
-    if (el) el.innerHTML = delivered ? '📱 Invite sent to the phone' : '⚠️ invite not delivered';
+    if (el) el.innerHTML = `<span class="mb-invite-head">${icon('send')} Invite sent to the team</span>${text ? `<span class="mb-invite-text">${esc(text)}</span>` : ''}`;
   }
 
   micState(state) {

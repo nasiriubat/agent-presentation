@@ -5,7 +5,6 @@ import { createOpenAI } from './openai.js';
 import { runAgent } from './agent.js';
 import { createDemo1Tools } from './tools/demo1.js';
 import { getEveningForecast } from './weather.js';
-import { sendInvite } from './telegram.js';
 import { runNegotiation } from './negotiation.js';
 
 const DATA = fileURLToPath(new URL('../public/data/', import.meta.url));
@@ -37,14 +36,13 @@ export function createRouter({ env, openai = createOpenAI({ apiKey: env.OPENAI_A
     res.json({ ok: true, live: true });
   });
 
-  // Pre-flight: does the key work, is Telegram set up?
+  // Pre-flight: does the key work?
   router.get('/api/selftest', async (req, res) => {
-    const telegramConfigured = Boolean(env.TELEGRAM_BOT_TOKEN && (env.TELEGRAM_CHAT_ID_AIDUL || env.TELEGRAM_CHAT_ID_NASIR));
     try {
       await openai.responses({ model: 'gpt-6-luna', input: 'Reply with: ok', store: false });
-      res.json({ openai: true, telegramConfigured });
+      res.json({ openai: true });
     } catch (err) {
-      res.json({ openai: false, error: err.message, telegramConfigured });
+      res.json({ openai: false, error: err.message });
     }
   });
 
@@ -78,11 +76,6 @@ export function createRouter({ env, openai = createOpenAI({ apiKey: env.OPENAI_A
 
   router.get('/api/weather', async (req, res) => {
     res.json(await getEveningForecast());
-  });
-
-  router.post('/api/telegram', async (req, res) => {
-    const who = req.body.who === 'aidul' ? 'AIDUL' : 'NASIR';
-    res.json(await sendInvite({ token: env.TELEGRAM_BOT_TOKEN, chatId: env[`TELEGRAM_CHAT_ID_${who}`], text: String(req.body.text ?? '') }));
   });
 
   router.post('/api/negotiate', async (req, res) => {

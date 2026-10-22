@@ -1,6 +1,7 @@
 // The "tool map": the agent in the middle, its tools around it, a glowing dot for every call.
 import { initialState, reduceState, stripMarkdown } from './state.js';
-import { DbPanel, MemoryPanel, CodePanel, LogPanel } from './panels.js';
+import { StoryPanel, DbPanel, MemoryPanel, CodePanel, LogPanel } from './panels.js';
+import { icon } from '../ui/icons.js';
 import './toolmap.css';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -10,10 +11,11 @@ const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 export { esc };
 
 // Hand-placed tool positions (percent of the stage) that keep the centre and caption clear.
+// Top row high and bottom row low, so the thought bubble fits between the top row and the agent.
 const LAYOUTS = {
-  3: [[20, 24], [80, 24], [80, 68]],
-  4: [[20, 24], [80, 24], [80, 68], [20, 68]],
-  5: [[18, 22], [50, 13], [82, 22], [82, 68], [18, 68]],
+  3: [[17, 13], [83, 13], [83, 80]],
+  4: [[17, 13], [83, 13], [83, 80], [17, 80]],
+  5: [[16, 13], [50, 86], [84, 13], [84, 80], [16, 80]],
 };
 const ellipse = (i, n) => {
   const a = Math.PI * (1.15 + (1.7 * i) / Math.max(1, n - 1));
@@ -27,15 +29,16 @@ export class ToolMap {
     this.opts = { tools, memory: panels.memory ?? [] };
     this.speed = speed;
     this.root = el('div', 'tm');
+    this.story = el('div', 'tm-story-col');
     this.stage = el('div', 'tm-stage');
     this.side = el('div', 'tm-side');
-    this.root.append(this.stage, this.side);
+    this.root.append(this.story, this.stage, this.side);
     container.append(this.root);
 
     this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     this.svg.setAttribute('class', 'tm-lines');
     this.stage.append(this.svg);
-    this.agent = el('div', 'tm-node tm-agent', '<span class="tm-ic">🤖</span><span>Agent</span>');
+    this.agent = el('div', 'tm-node tm-agent', `<span class="tm-ic">${icon('bot')}</span><span>Agent</span>`);
     this.stage.append(this.agent);
     this.nodes = {};
     this.lines = {};
@@ -45,7 +48,7 @@ export class ToolMap {
     const preset = LAYOUTS[tools.length];
     tools.forEach((t, i) => {
       t.pos = t.pos ?? preset?.[i] ?? ellipse(i, tools.length);
-      const node = el('div', `tm-node${t.danger ? ' tm-danger' : ''}`, `<span class="tm-ic">${t.icon}</span><span>${esc(t.label)}</span>`);
+      const node = el('div', `tm-node${t.danger ? ' tm-danger' : ''}`, `<span class="tm-ic">${icon(t.icon)}</span><span>${esc(t.label)}</span>`);
       node.style.left = `${t.pos[0]}%`;
       node.style.top = `${t.pos[1]}%`;
       this.stage.append(node);
@@ -60,12 +63,15 @@ export class ToolMap {
     this.agent.style.top = '46%';
     this.dot = el('div', 'tm-dot');
     this.bubble = el('div', 'tm-bubble');
-    this.caption = el('div', 'tm-caption');
     this.banner = el('div', 'tm-banner');
     this.overlay = el('div', 'tm-overlay');
-    this.stage.append(this.dot, this.bubble, this.caption, this.banner, this.overlay);
+    this.stage.append(this.dot, this.bubble, this.banner, this.overlay);
 
     this.panels = {};
+    // the story narrates every tool by the icon of its node
+    const toolIcons = {};
+    for (const t of tools) for (const id of [t.id, ...(t.aliases ?? [])]) toolIcons[id] = t.icon;
+    this.panels.story = new StoryPanel(this.story, { toolIcons });
     if (panels.db) this.panels.db = new DbPanel(this.side, panels.db);
     if (panels.memory) this.panels.memory = new MemoryPanel(this.side);
     if (panels.code) this.panels.code = new CodePanel(this.side, panels.code);
@@ -146,20 +152,27 @@ export class ToolMap {
         if (e.public) {
           const leaked = /sk_|PASSWORD|API_KEY/i.test(e.content);
           if (this.nodes.public) { await this.travel('public'); this.dot.style.opacity = 0; if (leaked) this.nodes.public.classList.add('tm-hit'); }
-          this.showOverlay(leaked ? 'warn' : 'public', `<b>📢 Now public: ${esc(e.path)}</b><pre>${esc(e.content)}</pre>`);
+          this.showOverlay(leaked ? 'warn' : 'public', `<b>${icon('megaphone')} Now public: ${esc(e.path)}</b><pre>${esc(e.content)}</pre>`);
         }
         await this.wait(400);
         break;
       case 'warn':
-        this.showOverlay('warn', `<b>⚠️ Hidden in the page:</b><div>${esc(e.text)}</div>`);
+        this.showOverlay('warn', `<b>${icon('warning')} Hidden in the document:</b><div>${esc(e.text)}</div>`);
         await this.wait(600);
         break;
+      case 'harm': {
+        const hit = this.nodes[this.nodeId(prev.activeTool ?? '')];
+        hit?.classList.add('tm-hit');
+        this.showOverlay('warn', `<b>${icon('warning')} ${esc(e.text)}</b>`);
+        await this.wait(800);
+        break;
+      }
       case 'guard':
-        this.showOverlay('guard', `<b>🛡️ Guard</b><div>${esc(e.text)}</div>`);
+        this.showOverlay('guard', `<b>${icon('shield')} Guard</b><div>${esc(e.text)}</div>`);
         await this.wait(600);
         break;
       case 'approval':
-        this.showOverlay('approval', `<b>🙋 Human check: publish this?</b><pre>${esc(e.text)}</pre><div class="tm-answer tm-${e.answer}">${e.answer === 'y' ? '✔ Approved' : '✖ Blocked'}</div>`);
+        this.showOverlay('approval', `<b>${icon('human')} Human check: publish this?</b><pre>${esc(e.text)}</pre><div class="tm-answer tm-${e.answer}">${e.answer === 'y' ? `${icon('check')} Approved` : `${icon('x')} Blocked`}</div>`);
         await this.wait(800);
         break;
       case 'section':
@@ -179,9 +192,9 @@ export class ToolMap {
     for (const [id, line] of Object.entries(this.lines)) line.classList.toggle('tm-on', active === id);
     if (e?.type === 'user' || !e) Object.values(this.nodes).forEach((n) => n.classList.remove('tm-hit'));
     this.agent.classList.toggle('tm-thinking', Boolean(s.bubble));
-    this.bubble.textContent = s.bubble ? `💭 ${stripMarkdown(s.bubble)}` : '';
+    this.bubble.textContent = s.bubble ? stripMarkdown(s.bubble) : '';
     this.bubble.classList.toggle('tm-show', Boolean(s.bubble));
-    this.caption.textContent = s.caption || 'Ready.';
+    this.panels.story.render(s.story);
     this.panels.db?.highlight(s.highlightedRows);
     this.panels.memory?.render(s.memory);
     this.panels.code?.highlight(s.codeLine);

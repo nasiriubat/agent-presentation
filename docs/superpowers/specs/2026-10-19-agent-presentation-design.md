@@ -51,7 +51,7 @@ Two speakers. The slides and notes refer to them by **role**, not by name, becau
 | Time | Segment | What's on screen / what happens | Audience engagement |
 |---|---|---|---|
 | 0–3 | **Cold open** | A plain chatbot box. The demo speaker types "Book a dinner for my team tonight." A real model with **no tools** answers that it can't. The theory speaker: *"By the end of this hour, the same kind of AI will do this while you watch, and talk while it does it."* Then the title slide (title, both speakers, GPT-Lab · Tampere University, sponsor credit for Crazytown Tampere). | A promise that's paid off at minute ~45 |
-| 3–6 | **Hands up** | "Who used ChatGPT this week?" → "Who had it actually *do* something: send, book, change?" → *"That gap is this talk."* A short who-we-are line (full profiles come at the end). | Show of hands |
+| 3–6 | **Hands up** | "Who used ChatGPT this week?" → "Who had it actually *do* something: send, book, change?" →  A short who-we-are line (full profiles come at the end). | Show of hands |
 | 6–13 | **Brain in a jar → brain with hands** | One animated picture that builds up step by step: the chatbot is a brain in a jar. It gets **hands** (tools), a **notebook** (memory) and a **to-do loop** (deciding the next step). Then the **agent loop pseudocode** appears (see 5.4), still in plain language. A short "how we got here" strip: chat → tools → memory → agents acting → agents talking to agents. | Visual build-up, one idea per click |
 | 13–23 | **Demo 1 · Watch it work** | The tool map, with the visible database and memory list (5.1). A prepared task first, then **an audience member suggests a task**, which runs live. | Audience-chosen task |
 | 23–27 | **When memory goes wrong** | Short concept plus a mini replay: an old memory entry with no date gives a confident wrong answer, then the guarded version checks the source and corrects its memory (based on the existing `demos` memory scenario). | Sets up the risk theme |
@@ -59,7 +59,7 @@ Two speakers. The slides and notes refer to them by **role**, not by name, becau
 | 37–42 | **"So what for your job?"** | Three short, concrete examples: accounting, HR or admin, and engineering or research. Plus the rule *"agents do, humans approve."* | Relatable examples |
 | 42–52 | **Demo 3 · Live voice finale** | Team dinner tonight, with agent-to-agent negotiation and the Telegram buzz (5.3). Pays off the cold open. | The wow moment |
 | 52–58 | **Q&A** | The voice agent stays on, so audience questions can be put to it as well. | Interaction |
-| 58–60 | **Close** | The take-home sentence. Then two speaker cards: photo, name, "Project Researcher · GPT-Lab, Tampere University", and **two QR codes each with a caption below: "LinkedIn" and "Portfolio"**. Then one large QR code: "Replay these demos on your phone" linking to the public site. Credit line: organised by GPT-Lab, Tampere University · sponsored by Crazytown Tampere. | Take-home |
+| 58–60 | **Close** | The take-home sentence. Then two speaker cards: photo, name, "Project Researcher · GPT-Lab, Tampere University", and **two QR codes each with a caption below: "LinkedIn" and "Portfolio"**. Then one large QR code: "Replay these demos on your phone" linking to the public site. Credit line: organised by GPT-Lab, Tampere University ·  Crazytown Tampere. | Take-home |
 
 Timings are a guide. Each slide carries speaker notes labelled **Theory speaker** or **Demo speaker**.
 

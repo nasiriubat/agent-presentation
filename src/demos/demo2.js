@@ -1,23 +1,26 @@
-// Demo 2 · Watch it get fooled: a web page hides instructions; then the same task with guards.
-import { toolmapDemo } from './toolmapDemo.js';
+// Demo 2 · Watch it do your work: this week's supplier invoices, matched to purchase orders,
+// the odd one queried, a human approving the email before it goes out.
+import { toolmapDemo, loadJson } from './toolmapDemo.js';
 
-const TOOLS = [
-  { id: 'read_webpage', label: 'Read web page', icon: '🌐', phrase: 'reads the web page' },
-  { id: 'read_file', label: 'Your private files', icon: '🔐', phrase: 'opens your private files' },
-  { id: 'public', label: 'Public wiki', icon: '📢', danger: true, aliases: ['publish'], phrase: 'publishes to the public wiki' },
+export const INVOICE_TOOLS = [
+  { id: 'read_inbox', label: 'Inbox', icon: 'mail', phrase: 'reads the invoices in the inbox' },
+  { id: 'calculator', label: 'Calculator', icon: 'calculator' },
+  { id: 'search_orders', label: 'Purchase orders', icon: 'database', phrase: 'checks the purchase orders' },
+  { id: 'draft_email', label: 'Draft email', icon: 'file', phrase: 'drafts an email' },
+  { id: 'send_email', label: 'Send email', icon: 'send', danger: true, phrase: 'sends the email' },
 ];
 
+export const ORDERS_TABLE = {
+  title: 'Purchase orders', icon: 'database',
+  columns: [{ key: 'po', label: 'PO' }, { key: 'supplier', label: 'Supplier' }, { key: 'amount_eur', label: 'Amount', money: true }, { key: 'status', label: 'Status' }],
+};
+
 export async function mount(container, { api } = {}) {
+  const rows = await loadJson('data/orders.json');
   return toolmapDemo(container, {
     api,
-    tools: TOOLS,
-    panels: {},
-    tabs: [
-      { id: 'unguarded', label: '😈 No guard', replay: 'replays/demo2-unguarded.json' },
-      { id: 'guarded', label: '🛡️ With guard', replay: 'replays/demo2-guarded.json' },
-    ],
-    overlay: (t) => t.id === 'unguarded'
-      ? `<div>Task: <i>"Summarise this review for our wiki."</i><br><b>Will the agent fall for the hidden trap?</b><div class="vote"><span>🙋 Yes</span><span>🙅 No</span></div><small>Hands up, then press → to find out</small></div>`
-      : `<div><b>Same task, same page.</b><br>Now with two guards: the page is labelled "untrusted", and anything public needs a human's yes.<small>Press → to run it</small></div>`,
+    tools: INVOICE_TOOLS,
+    panels: { db: { ...ORDERS_TABLE, rows }, memory: [] },
+    tabs: [{ id: 'invoices', label: 'This week\'s invoices', replay: 'replays/demo2-invoices.json' }],
   });
 }

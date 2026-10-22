@@ -7,7 +7,6 @@ import { withTimeout } from '../src/core/timeout.js';
 import { createApi } from '../src/core/api.js';
 import { createOpenAI } from '../server/openai.js';
 import { getEveningForecast } from '../server/weather.js';
-import { sendInvite } from '../server/telegram.js';
 import { RealtimeSession } from '../src/voice/session.js';
 import { createNegotiator } from '../src/voice/negotiate.js';
 import { exitGate } from '../src/voice/exitGate.js';
@@ -46,13 +45,6 @@ test('I2: a hanging weather service falls back to the cached forecast quickly', 
   const t = Date.now();
   const f = await getEveningForecast({ fetch: hangingFetch, timeoutMs: 60 });
   assert.equal(f.cached, true);
-  assert.ok(Date.now() - t < 500);
-});
-
-test('I2: a hanging Telegram call reports not delivered quickly', async () => {
-  const t = Date.now();
-  const r = await sendInvite({ fetch: hangingFetch, token: 'T', chatId: '1', text: 'x', timeoutMs: 60 });
-  assert.equal(r.delivered, false);
   assert.ok(Date.now() - t < 500);
 });
 

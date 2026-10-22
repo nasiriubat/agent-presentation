@@ -1,7 +1,10 @@
 // Shared shell for the tool-map demos: tabs (e.g. Unguarded / Guarded), controls, replay or live.
+// One state machine drives everything: idle → playing (autoplay) → paused → done, with presenter
+// steps (→) and the buttons never fighting each other.
 import { ToolMap } from '../toolmap/toolmap.js';
 import { EventPlayer } from '../core/player.js';
 import { api as defaultApi } from '../core/api.js';
+import { icon } from '../ui/icons.js';
 import './demos.css';
 
 const BASE = import.meta.env?.BASE_URL ?? '/';
@@ -9,7 +12,7 @@ export const asset = (p) => `${BASE}${p}`;
 export const loadJson = (p) => fetch(asset(p)).then((r) => { if (!r.ok) throw new Error(`${p}: ${r.status}`); return r.json(); });
 export const loadText = (p) => fetch(asset(p)).then((r) => r.text());
 
-// tabs: [{id, label, replay: 'replays/x.json', memory?: entries, intro?: html}]
+// tabs: [{id, label, replay: 'replays/x.json', memory?: entries}]
 export function toolmapDemo(container, { tools, panels = {}, tabs, mode = 'replay', live, overlay, api = defaultApi }) {
   const root = document.createElement('div');
   root.className = 'demo';
@@ -18,28 +21,43 @@ export function toolmapDemo(container, { tools, panels = {}, tabs, mode = 'repla
       <div class="demo-tabs">${tabs.length > 1 ? tabs.map((t) => `<button type="button" data-tab="${t.id}">${t.label}</button>`).join('') : ''}</div>
       <div class="demo-tools">
         ${live ? `<form class="demo-ask"><input placeholder="Audience question…" aria-label="Audience question"><button type="submit">Ask live</button></form>` : ''}
-        <button type="button" data-act="play" title="Play">▶</button>
-        <button type="button" data-act="reset" title="Restart">↺</button>
-        <button type="button" data-act="log" title="What really happened">{ }</button>
-        ${live ? '<button type="button" data-act="record" title="Download this run as a replay">⤓</button>' : ''}
+        <button type="button" data-act="play" title="Play" aria-label="Play">${icon('play')}</button>
+        <button type="button" data-act="reset" title="Restart this demo" aria-label="Restart this demo">${icon('rotate')}</button>
+        <button type="button" data-act="log" title="What really happened (the raw tool calls)" aria-label="What really happened">${icon('braces')}</button>
+        ${live ? `<button type="button" data-act="record" title="Download this run as a replay" aria-label="Download this run as a replay">${icon('download')}</button>` : ''}
       </div>
     </div>
     <div class="demo-body"></div>
     <div class="demo-stall"><span>The live run is stuck.</span><button type="button">Switch to replay</button></div>`;
   container.append(root);
   const body = root.querySelector('.demo-body');
-  let tab = tabs[0], map, player, events = [], liveRun, liveEvents = [], stallTimer, overlayEl;
+  const playBtn = root.querySelector('[data-act="play"]');
+  let tab = tabs[0], map, player, liveRun, liveEvents = [], stallTimer, overlayEl;
   let liveState = null; // null | 'running' | 'done' — a live run replaces the replay on this tab
+  let playing = false;
+  let chain = Promise.resolve(); // steps and autoplay run one after another, never over each other
+
+  const setPlaying = (on) => {
+    playing = on;
+    playBtn.innerHTML = on ? icon('pause') : icon('play');
+    playBtn.title = playBtn.ariaLabel = on ? 'Pause' : 'Play';
+    root.classList.toggle('demo-playing', on);
+  };
+  const queue = (fn) => { chain = chain.then(fn, fn); return chain; };
 
   async function setTab(t) {
     tab = t;
+    player?.stop();
+    setPlaying(false);
     liveRun?.abort();
     liveState = null;
     root.querySelectorAll('[data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === t.id));
     body.innerHTML = '';
+    overlayEl = null;
     map = new ToolMap(body, { tools: tools.map((x) => ({ ...x })), panels: { ...panels, memory: t.memory ?? panels.memory } });
-    events = await loadJson(t.replay);
-    player = new EventPlayer(events, (e) => map.handle(e));
+    const events = await loadJson(t.replay);
+    const m = map;
+    player = new EventPlayer(events, (e) => (map === m ? m.handle(e) : undefined)); // a reset mid-run orphans the old player
     if (overlay) {
       overlayEl = document.createElement('div');
       overlayEl.className = 'demo-overlay';
@@ -48,7 +66,7 @@ export function toolmapDemo(container, { tools, panels = {}, tabs, mode = 'repla
     }
   }
 
-  const ready = setTab(tab);
+  let ready = setTab(tab);
 
   function dismissOverlay() {
     if (overlayEl) { overlayEl.remove(); overlayEl = null; return true; }
@@ -61,18 +79,21 @@ export function toolmapDemo(container, { tools, panels = {}, tabs, mode = 'repla
   }
 
   async function runLive(question) {
+    await ready;
+    player.stop();
+    setPlaying(false);
     dismissOverlay();
     player.reset();
     map.reset();
     liveEvents = [];
     root.classList.remove('demo-stalled');
     liveState = 'running';
-    const queue = [];
+    const pending = [];
     let draining = false;
     const drain = async () => {
       if (draining) return;
       draining = true;
-      while (queue.length) await map.handle(queue.shift());
+      while (pending.length) await map.handle(pending.shift());
       draining = false;
     };
     armStall();
@@ -82,15 +103,34 @@ export function toolmapDemo(container, { tools, panels = {}, tabs, mode = 'repla
       if (e.type === 'answer' && e.error) root.classList.add('demo-stalled');
       armStall();
       liveEvents.push(e);
-      queue.push(e);
+      pending.push(e);
       drain();
     });
   }
 
-  root.querySelectorAll('[data-tab]').forEach((b) => (b.onclick = () => setTab(tabs.find((t) => t.id === b.dataset.tab))));
-  root.querySelector('[data-act="play"]').onclick = () => { dismissOverlay(); player.autoplay(); };
-  root.querySelector('[data-act="reset"]').onclick = () => setTab(tab);
-  root.querySelector('[data-act="log"]').onclick = () => map.toggleLog();
+  // Autoplay from wherever the demo is; resolves when it reaches the end or is paused.
+  function autoplay() {
+    return queue(async () => {
+      await ready;
+      if (liveState || player.done) return;
+      dismissOverlay();
+      setPlaying(true);
+      const p = player;
+      await p.autoplay();
+      if (player === p) setPlaying(false);
+    });
+  }
+
+  function pause() {
+    player?.stop();
+    setPlaying(false);
+  }
+
+  const blur = (b) => b.blur(); // keep keyboard focus with the deck, not the button
+  root.querySelectorAll('[data-tab]').forEach((b) => (b.onclick = () => { blur(b); ready = setTab(tabs.find((t) => t.id === b.dataset.tab)); }));
+  playBtn.onclick = () => { blur(playBtn); playing ? pause() : autoplay(); };
+  root.querySelector('[data-act="reset"]').onclick = (ev) => { blur(ev.currentTarget); ready = setTab(tab); };
+  root.querySelector('[data-act="log"]').onclick = (ev) => { blur(ev.currentTarget); map?.toggleLog(); };
   root.querySelector('[data-act="record"]')?.addEventListener('click', () => {
     const blob = new Blob([JSON.stringify(liveEvents.map((e, i) => ({ ...e, t: i * 1200 })), null, 1)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -98,7 +138,7 @@ export function toolmapDemo(container, { tools, panels = {}, tabs, mode = 'repla
     a.download = 'live-run.json';
     a.click();
   });
-  root.querySelector('.demo-stall button').onclick = () => { liveRun?.abort(); root.classList.remove('demo-stalled'); setTab(tab); };
+  root.querySelector('.demo-stall button').onclick = () => { liveRun?.abort(); root.classList.remove('demo-stalled'); ready = setTab(tab); };
   const form = root.querySelector('.demo-ask');
   if (form) {
     form.onsubmit = (ev) => {
@@ -110,24 +150,33 @@ export function toolmapDemo(container, { tools, panels = {}, tabs, mode = 'repla
     if (mode !== 'live') form.hidden = true;
   }
 
+  const onLastTab = () => tabs.indexOf(tab) === tabs.length - 1;
+
   return {
-    ready,
-    // Advances one presenter step. Returns false when the current tab has finished.
-    async step() {
-      await ready;
-      if (liveState === 'running') return true; // don't replay over a live answer that is still coming
-      if (liveState === 'done') return false;
-      if (dismissOverlay()) return true;
-      if (player.done) {
-        const i = tabs.indexOf(tab);
-        if (i < tabs.length - 1) { await setTab(tabs[i + 1]); return true; }
-        return false;
-      }
-      await player.step();
-      return true;
+    get ready() { return ready; },
+    // true once every tab has played to the end (or a live run finished)
+    get finished() { return liveState === 'done' || Boolean(player?.done && onLastTab()); },
+    // Advances one presenter step. Returns false when the whole demo has finished.
+    step() {
+      if (playing) { pause(); return Promise.resolve(true); } // → while autoplaying just pauses
+      return queue(async () => {
+        await ready;
+        if (liveState === 'running') return true; // don't replay over a live answer that is still coming
+        if (liveState === 'done') return false;
+        if (dismissOverlay()) return true;
+        if (player.done) {
+          if (onLastTab()) return false;
+          ready = setTab(tabs[tabs.indexOf(tab) + 1]);
+          await ready;
+          return true;
+        }
+        await player.step();
+        return true;
+      });
     },
-    async autoplay() { await ready; dismissOverlay(); await player.autoplay(); },
-    reset() { liveRun?.abort(); clearTimeout(stallTimer); return setTab(tabs[0]); },
+    autoplay,
+    pause,
+    reset() { liveRun?.abort(); clearTimeout(stallTimer); ready = setTab(tabs[0]); return ready; },
     runLive,
     get map() { return map; },
   };

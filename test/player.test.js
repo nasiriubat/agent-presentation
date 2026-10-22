@@ -41,3 +41,16 @@ test('step() awaits an async onEvent before the next event', async () => {
   await p.step();
   assert.deepEqual(order, ['a', 'b']);
 });
+
+test('stop() during a timing gap pauses before the next event, and autoplay() resumes from there', async () => {
+  const seen = [];
+  const timed = events.map((e, i) => ({ ...e, t: i * 40 }));
+  const p = new EventPlayer(timed, (e) => seen.push(e.text));
+  const run = p.autoplay();
+  await new Promise((r) => setTimeout(r, 15));
+  p.stop();
+  await run;
+  assert.deepEqual(seen, ['a']);
+  await p.autoplay();
+  assert.deepEqual(seen, ['a', 'b', 'c']);
+});

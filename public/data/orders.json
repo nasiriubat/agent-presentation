@@ -1,0 +1,7 @@
+[
+  { "id": 1, "po": "PO-2041", "supplier": "Nordic Office Supply", "amount_eur": 4200, "status": "open" },
+  { "id": 2, "po": "PO-2044", "supplier": "Lumo Print", "amount_eur": 1850, "status": "open" },
+  { "id": 3, "po": "PO-2047", "supplier": "Tampere Catering", "amount_eur": 960, "status": "open" },
+  { "id": 4, "po": "PO-2039", "supplier": "CloudHost Oy", "amount_eur": 2400, "status": "paid" },
+  { "id": 5, "po": "PO-2050", "supplier": "Säle Furniture", "amount_eur": 7300, "status": "open" }
+]

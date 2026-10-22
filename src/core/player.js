@@ -24,15 +24,18 @@ export class EventPlayer {
     return !this.done;
   }
 
+  // Plays on from the current position until the end or stop(). Resolves when it stops.
   async autoplay() {
     this.stopped = false;
     let last = this.i > 0 ? this.events[this.i - 1].t ?? 0 : 0;
     while (!this.done && !this.stopped) {
-      const e = this.events[this.i++];
+      const e = this.events[this.i];
       if (e.t !== undefined) {
         await sleep(Math.max(0, e.t - last));
+        if (this.stopped) break; // paused during the gap: the event stays queued for later
         last = e.t;
       }
+      this.i++;
       await this.onEvent(e);
     }
   }
